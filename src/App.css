@@ -2,19 +2,13 @@
   box-sizing: border-box;
 }
 
-/* Style the tab */
-.tab {
-  float: left;
+.menu {
   border: 1px solid #ccc;
   background-color: #f1f1f1;
-
-  height: 300px;
 }
 
-/* Style the buttons that are used to open the tab content */
-.tab button {
+.menu button {
   display: block;
-  background-color: inherit;
   color: black;
   padding: 22px 16px;
   width: 100%;
@@ -25,12 +19,26 @@
   transition: 0.3s;
 }
 
-/* Change background color of buttons on hover */
-.tab button:hover {
+.menu button:hover:not(.active) {
   background-color: #ddd;
 }
 
-/* Create an active/current "tab button" class */
-.tab button.active {
+.menu a {
+  text-decoration: none;
+}
+
+.active {
   background-color: lightblue;
+}
+
+.container {
+  margin-top: 40px;
+}
+
+.menu-container {
+  padding-left: 0;
+}
+
+.pageContent {
+  margin-top: 10px;
 }
