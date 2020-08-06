@@ -1,6 +1,7 @@
 import React from "react";
 import description from "../../algoProblemDescriptions/rivers";
 import AlgoHeader from "../../components/AlgoHeader";
+import { sleep } from "../../services/utilities";
 
 const colors = { 0: "white", 1: "blue" };
 
@@ -13,8 +14,23 @@ const initialStatePresets = {
   riverSizes: [],
 };
 
+const shuffle = (arr) => {
+  let j, x, i;
+  for (i = arr.length - 1; i > 0; i--) {
+    j = Math.floor(Math.random() * (i + 1));
+    x = arr[i];
+    arr[i] = arr[j];
+    arr[j] = x;
+  }
+  return arr;
+};
+
 class Rivers extends React.Component {
   state = { riverMatrix: [], ...initialStatePresets };
+
+  componentDidMount() {
+    this.getRandomizedMatrix();
+  }
 
   getRandomizedRiverSizes = () => {
     let targetCumulativeSize = 21;
@@ -30,42 +46,116 @@ class Rivers extends React.Component {
 
   getRandomizedMatrix = () => {
     const targetRiverSizes = this.getRandomizedRiverSizes();
-    const riverChance = 15;
-    const riverMatrix = new Array(gridHeight).fill(0).map((_) => 0);
+    const riverChance = 0.01;
+    const riverMatrix = new Array(gridHeight)
+      .fill(0)
+      .map((_) => new Array(gridWidth).fill(0));
+    let currRiverIdx = 0;
 
-    while (targetRiverSizes.length) {
-      let currRiverSize = targetRiverSizes.pop();
+    while (currRiverIdx < targetRiverSizes.length) {
       for (let i = 0; i < riverMatrix.length; i++) {
         for (let j = 0; j < gridWidth; j++) {
-          const randInt = Math.floor(Math.random() * 100);
-          riverMatrix[i][j] = 0;
+          const randInt = Math.random();
+
           if (
             randInt < riverChance &&
             !this.adjacentCellsContainRiver(i, j, riverMatrix)
           ) {
-            riverMatrix[i][j] = 1;
+            const riverWasAdded = this.tryAddRiver(
+              riverMatrix,
+              i,
+              j,
+              currRiverIdx,
+              targetRiverSizes
+            );
+            if (riverWasAdded && currRiverIdx === targetRiverSizes.length - 1) {
+              this.setState({
+                riverMatrix,
+                ...initialStatePresets,
+              });
+              return;
+            } else if (riverWasAdded) {
+              currRiverIdx++;
+            }
           }
         }
       }
     }
-
-    this.setState({
-      riverMatrix,
-      ...initialStatePresets,
-    });
   };
 
-  adjacentCellsContainRiver = (i, j, matrix) => {
-    if (i > 0 && matrix[i - 1][j] === 1) {
+  tryAddRiver(matrix, i, j, idx, sizes) {
+    // const mutateDirection = Math.random() < 0.2;
+
+    matrix[i][j] = 1;
+    sizes[idx]--;
+    if (!sizes[idx]) {
       return true;
     }
-    if (i < matrix.length - 1 && matrix[i + 1][j] === 1) {
+    const neighbors = this.getUnoccupiedRandomAdjacent(matrix, i, j);
+    console.log(neighbors);
+
+    if (!neighbors.length) {
+      matrix[i][j] = 0;
+      sizes[idx]++;
+      return false;
+    }
+
+    for (let [x, y] of neighbors) {
+      const riverWasAdded = this.tryAddRiver(matrix, x, y, idx, sizes);
+      if (riverWasAdded) {
+        return true;
+      }
+    }
+    matrix[i][j] = 0;
+    sizes[idx]++;
+    return false;
+  }
+
+  getUnoccupiedRandomAdjacent = (matrix, i, j) => {
+    const neighbors = [];
+    if (
+      i > 0 &&
+      matrix[i - 1][j] === 0 &&
+      !this.adjacentCellsContainRiver(i - 1, j, matrix, i, j)
+    ) {
+      neighbors.push([i - 1, j]);
+    }
+    if (
+      i < matrix.length - 1 &&
+      matrix[i + 1][j] === 0 &&
+      !this.adjacentCellsContainRiver(i + 1, j, matrix, i, j)
+    ) {
+      neighbors.push([i + 1, j]);
+    }
+    if (
+      j > 0 &&
+      matrix[i][j - 1] === 0 &&
+      !this.adjacentCellsContainRiver(i, j - 1, matrix, i, j)
+    ) {
+      neighbors.push([i, j - 1]);
+    }
+    if (
+      j < matrix[0].length - 1 &&
+      matrix[i][j + 1] === 0 &&
+      !this.adjacentCellsContainRiver(i, j + 1, matrix, i, j)
+    ) {
+      neighbors.push([i, j + 1]);
+    }
+
+    return shuffle(neighbors);
+  };
+
+  adjacentCellsContainRiver = (i, j, matrix, prevX, prevY) => {
+    if (i > 0 && matrix[i - 1][j] === 1 && prevX !== i - 1) {
       return true;
     }
-    if (j > 0 && matrix[i][j - 1] === 1) {
+    if (i < matrix.length - 1 && matrix[i + 1][j] === 1 && prevX !== i + 1) {
       return true;
     }
-    if (i < matrix[0].length - 1 && matrix[i][j + 1] === 1) {
+    if (j > 0 && matrix[i][j - 1] === 1 && prevY !== j - 1) {
+      return true;
+    }
+    if (j < matrix[0].length - 1 && matrix[i][j + 1] === 1 && prevY !== j + 1) {
       return true;
     }
 
@@ -102,7 +192,7 @@ class Rivers extends React.Component {
           </button>
         </div>
         <div className="col d-flex justify-content-center align-items-end">
-          <h6 className={simulationIsComplete && "simCompleteBox"}>
+          <h6 className={simulationIsComplete ? "simCompleteBox" : ""}>
             Sizes: {(simulationIsRunning || simulationIsComplete) && riverSizes}
           </h6>
         </div>
@@ -118,7 +208,7 @@ class Rivers extends React.Component {
         <>
           <AlgoHeader title="River Sizes" description={description} />
           {this.renderButtonRow()}
-          <div className="row riverGrid">
+          <div className="row grid">
             <div className="col">
               {riverMatrix.length &&
                 riverMatrix.map((r, i) => (

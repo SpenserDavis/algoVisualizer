@@ -168,7 +168,7 @@ class Apples extends React.Component {
           </button>
         </div>
         <div className="col d-flex justify-content-center align-items-end">
-          <h6 className={simulationIsComplete && "simCompleteBox"}>
+          <h6 className={simulationIsComplete ? "simCompleteBox" : ""}>
             Days: {(simulationIsRunning || simulationIsComplete) && dayCounter}
           </h6>
         </div>
