@@ -33,6 +33,7 @@
 
 .container {
   margin-top: 40px;
+  margin-bottom: 40px;
 }
 
 .menu-container {
@@ -41,4 +42,60 @@
 
 .pageContent {
   margin-top: 10px;
+}
+
+.description pre {
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  color: rgba(0, 0, 0, 0.9);
+  font-family: Consolas, monospace;
+  margin-bottom: 10px;
+  overflow: auto;
+  padding: 10px;
+}
+
+.gridSquare {
+  display: inline-block;
+  position: relative;
+  height: 50px;
+  width: 50px;
+  border: 1px solid black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gridSquare:hover {
+  cursor: pointer;
+}
+
+.gridSquare.red {
+  background-color: red;
+}
+.gridSquare.white {
+  background-color: white;
+}
+.gridSquare.green {
+  background-color: green;
+}
+.gridSquare.purple {
+  background-color: rgb(255, 0, 255);
+}
+.gridSquare.yellow {
+  background-color: yellow;
+}
+.gridSquare.blue {
+  background-color: blue;
+}
+.gridSquare.black {
+  background-color: black;
+}
+
+.grid {
+  margin-top: 10px;
+}
+
+.simCompleteBox {
+  border: 1px solid blue;
+  padding: 5px;
 }
