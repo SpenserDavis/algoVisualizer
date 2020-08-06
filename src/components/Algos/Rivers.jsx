@@ -12,6 +12,8 @@ const initialStatePresets = {
   simulationIsRunning: false,
   simulationIsComplete: false,
   riverSizes: [],
+  visited: [],
+  currNode: [-1, -1],
 };
 
 const shuffle = (arr) => {
@@ -50,8 +52,8 @@ class Rivers extends React.Component {
     const riverMatrix = new Array(gridHeight)
       .fill(0)
       .map((_) => new Array(gridWidth).fill(0));
+    const visited = riverMatrix.slice().map((row) => row.map((_) => false));
     let currRiverIdx = 0;
-
     while (currRiverIdx < targetRiverSizes.length) {
       for (let i = 0; i < riverMatrix.length; i++) {
         for (let j = 0; j < gridWidth; j++) {
@@ -72,6 +74,7 @@ class Rivers extends React.Component {
               this.setState({
                 riverMatrix,
                 ...initialStatePresets,
+                visited,
               });
               return;
             } else if (riverWasAdded) {
@@ -92,7 +95,6 @@ class Rivers extends React.Component {
       return true;
     }
     const neighbors = this.getUnoccupiedRandomAdjacent(matrix, i, j);
-    console.log(neighbors);
 
     if (!neighbors.length) {
       matrix[i][j] = 0;
@@ -162,7 +164,71 @@ class Rivers extends React.Component {
     return false;
   };
 
-  runSimulation = () => {};
+  getRiverSizes = async () => {
+    this.setState({ simulationIsRunning: true });
+    const riverSizes = [];
+    const { riverMatrix, visited } = this.state;
+
+    for (let i = 0; i < riverMatrix.length; i++) {
+      for (let j = 0; j < riverMatrix[0].length; j++) {
+        if (!visited[i][j]) {
+          await this.exploreNode(i, j, riverMatrix, riverSizes, visited);
+        }
+      }
+    }
+
+    this.setState({
+      visited,
+      riverSizes,
+      simulationIsRunning: false,
+      simulationIsComplete: true,
+    });
+  };
+
+  exploreNode = async (i, j, matrix, riverSizes, visited) => {
+    let currSize = 0;
+
+    const nodesToExplore = [[i, j]];
+
+    while (nodesToExplore.length) {
+      const [x, y] = nodesToExplore.shift();
+      this.setState({ currNode: [x, y] });
+      await sleep(100);
+      if (visited[x][y]) {
+        continue;
+      }
+      visited[x][y] = true;
+      if (matrix[x][y] === 0) {
+        continue;
+      }
+      currSize++;
+      nodesToExplore.push(...this.getUnvisitedNeighbors(x, y, matrix, visited));
+    }
+
+    if (currSize) {
+      riverSizes.push(currSize);
+      this.setState({ riverSizes });
+    }
+  };
+
+  getUnvisitedNeighbors = (i, j, matrix, visited) => {
+    const neighbors = [];
+    if (i > 0 && matrix[i - 1][j] && !visited[i - 1][j]) {
+      neighbors.push([i - 1, j]);
+    }
+
+    if (j > 0 && matrix[i][j - 1] && !visited[i][j - 1]) {
+      neighbors.push([i, j - 1]);
+    }
+    if (i < matrix.length - 1 && matrix[i + 1][j] && !visited[i + 1][j]) {
+      neighbors.push([i + 1, j]);
+    }
+    if (j < matrix[0].length - 1 && matrix[i][j + 1] && !visited[i][j + 1]) {
+      neighbors.push([i, j + 1]);
+    }
+
+    return neighbors;
+  };
 
   renderButtonRow = () => {
     const {
@@ -171,8 +237,7 @@ class Rivers extends React.Component {
       riverSizes,
     } = this.state;
     return (
-      <div className="row">
-        <div className="col"></div>
+      <div className="row d-flex justify-content-between">
         <div className="col d-flex justify-content-center">
           <button
             disabled={simulationIsRunning}
@@ -185,24 +250,41 @@ class Rivers extends React.Component {
         <div className="col d-flex justify-content-center">
           <button
             disabled={simulationIsRunning || simulationIsComplete}
-            onClick={this.runSimulation}
+            onClick={this.getRiverSizes}
             className="btn btn-success"
           >
             Run Simulation
           </button>
         </div>
         <div className="col d-flex justify-content-center align-items-end">
-          <h6 className={simulationIsComplete ? "simCompleteBox" : ""}>
-            Sizes: {(simulationIsRunning || simulationIsComplete) && riverSizes}
+          <h6
+            className={`no-wrap ${
+              simulationIsComplete ? "simCompleteBox" : ""
+            }`}
+          >
+            Sizes:{" "}
+            {(simulationIsRunning || simulationIsComplete) &&
+              `[${riverSizes.toString()}]`}
           </h6>
         </div>
-        <div className="col"></div>
       </div>
     );
   };
 
+  getSquareStyles = (i, j, c) => {
+    const { currNode, visited } = this.state;
+    const [x, y] = currNode;
+    const currNodeClass = i === x && j === y ? "currNode" : "";
+
+    const visitedNodeClass = visited[i][j] ? "visitedNode" : "";
+    const colorClass = colors[c];
+    const riverNode = c === 1 ? "riverNode" : "";
+    return `gridSquare ${colorClass} ${currNodeClass} ${visitedNodeClass} ${riverNode}`;
+  };
+
   render() {
     const { riverMatrix } = this.state;
+
     return (
       <div>
         <>
@@ -218,7 +300,10 @@ class Rivers extends React.Component {
                   >
                     {r.map((c, j) => (
                       <div key={`riverCol-${j}`}>
-                        <div className={`gridSquare ${colors[c]}`}> {c}</div>
+                        <div className={this.getSquareStyles(i, j, c)}>
+                          {" "}
+                          {c}
+                        </div>
                       </div>
                     ))}
                   </div>
