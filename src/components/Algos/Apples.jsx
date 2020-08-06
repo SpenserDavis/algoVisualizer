@@ -1,6 +1,7 @@
 import React from "react";
 import description from "../../algoProblemDescriptions/apples";
 import AlgoHeader from "../AlgoHeader";
+import { sleep } from "../../services/utilities";
 
 const colors = { 0: "white", 1: "green", 2: "purple" };
 
@@ -14,10 +15,6 @@ const initialStatePresets = {
   simulationIsComplete: false,
   dayCounter: 0,
 };
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 class Apples extends React.Component {
   state = {
@@ -171,7 +168,7 @@ class Apples extends React.Component {
           </button>
         </div>
         <div className="col d-flex justify-content-center align-items-end">
-          <h6 className={simulationIsComplete && "underline"}>
+          <h6 className={simulationIsComplete && "simCompleteBox"}>
             Days: {(simulationIsRunning || simulationIsComplete) && dayCounter}
           </h6>
         </div>
@@ -186,7 +183,7 @@ class Apples extends React.Component {
       <>
         <AlgoHeader title="Rotten Apples" description={description} />
         {this.renderButtonRow()}
-        <div className="row appleGrid">
+        <div className="row grid">
           <div className="col">
             {appleMatrix.length &&
               appleMatrix.map((r, i) => (

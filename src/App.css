@@ -91,10 +91,11 @@
   background-color: black;
 }
 
-.appleGrid {
+.grid {
   margin-top: 10px;
 }
 
-.underline {
+.simCompleteBox {
   border: 1px solid blue;
+  padding: 5px;
 }
