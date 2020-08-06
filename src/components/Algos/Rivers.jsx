@@ -8,6 +8,8 @@ const colors = { 0: "white", 1: "blue" };
 const gridHeight = 7;
 const gridWidth = 15;
 
+const sleepDelay = 75;
+
 const initialStatePresets = {
   simulationIsRunning: false,
   simulationIsComplete: false,
@@ -193,7 +195,7 @@ class Rivers extends React.Component {
     while (nodesToExplore.length) {
       const [x, y] = nodesToExplore.shift();
       this.setState({ currNode: [x, y] });
-      await sleep(100);
+      await sleep(sleepDelay);
       if (visited[x][y]) {
         continue;
       }
@@ -228,6 +230,17 @@ class Rivers extends React.Component {
     }
 
     return neighbors;
+  };
+
+  getSquareStyles = (i, j, c) => {
+    const { currNode, visited } = this.state;
+    const [x, y] = currNode;
+    const currNodeClass = i === x && j === y ? "currNode" : "";
+
+    const visitedNodeClass = visited[i][j] ? "visitedNode" : "";
+    const colorClass = colors[c];
+    const riverNode = c === 1 ? "riverNode" : "";
+    return `gridSquare ${colorClass} ${currNodeClass} ${visitedNodeClass} ${riverNode}`;
   };
 
   renderButtonRow = () => {
@@ -271,45 +284,36 @@ class Rivers extends React.Component {
     );
   };
 
-  getSquareStyles = (i, j, c) => {
-    const { currNode, visited } = this.state;
-    const [x, y] = currNode;
-    const currNodeClass = i === x && j === y ? "currNode" : "";
-
-    const visitedNodeClass = visited[i][j] ? "visitedNode" : "";
-    const colorClass = colors[c];
-    const riverNode = c === 1 ? "riverNode" : "";
-    return `gridSquare ${colorClass} ${currNodeClass} ${visitedNodeClass} ${riverNode}`;
+  renderGrid = () => {
+    const { riverMatrix } = this.state;
+    return (
+      <div className="row grid">
+        <div className="col">
+          {riverMatrix.length &&
+            riverMatrix.map((r, i) => (
+              <div
+                className="row d-flex justify-content-center"
+                key={`riverRow-${i}`}
+              >
+                {r.map((c, j) => (
+                  <div key={`riverCol-${j}`}>
+                    <div className={this.getSquareStyles(i, j, c)}> {c}</div>
+                  </div>
+                ))}
+              </div>
+            ))}
+        </div>
+      </div>
+    );
   };
 
   render() {
-    const { riverMatrix } = this.state;
-
     return (
       <div>
         <>
           <AlgoHeader title="River Sizes" description={description} />
           {this.renderButtonRow()}
-          <div className="row grid">
-            <div className="col">
-              {riverMatrix.length &&
-                riverMatrix.map((r, i) => (
-                  <div
-                    className="row d-flex justify-content-center"
-                    key={`riverRow-${i}`}
-                  >
-                    {r.map((c, j) => (
-                      <div key={`riverCol-${j}`}>
-                        <div className={this.getSquareStyles(i, j, c)}>
-                          {" "}
-                          {c}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ))}
-            </div>
-          </div>
+          {this.renderGrid()}
         </>
       </div>
     );

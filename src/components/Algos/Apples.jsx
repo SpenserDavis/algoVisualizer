@@ -10,6 +10,8 @@ const gridWidth = 15;
 const emptyChance = 15;
 const rottenChance = 15;
 
+const sleepDelay = 100;
+
 const initialStatePresets = {
   simulationIsRunning: false,
   simulationIsComplete: false,
@@ -135,7 +137,7 @@ class Apples extends React.Component {
     }
     this.setState({ appleMatrix: matrix });
     if (infectionDidOccur) {
-      await sleep(100);
+      await sleep(sleepDelay);
     }
     return infectedNeighbors;
   };
@@ -177,29 +179,35 @@ class Apples extends React.Component {
     );
   };
 
-  render() {
+  renderGrid = () => {
     const { appleMatrix } = this.state;
+    return (
+      <div className="row grid">
+        <div className="col">
+          {appleMatrix.length &&
+            appleMatrix.map((r, i) => (
+              <div
+                className="row d-flex justify-content-center"
+                key={`appleRow-${i}`}
+              >
+                {r.map((c, j) => (
+                  <div key={`appleCol-${j}`}>
+                    <div className={`gridSquare ${colors[c]}`}> {c}</div>
+                  </div>
+                ))}
+              </div>
+            ))}
+        </div>
+      </div>
+    );
+  };
+
+  render() {
     return (
       <>
         <AlgoHeader title="Rotten Apples" description={description} />
         {this.renderButtonRow()}
-        <div className="row grid">
-          <div className="col">
-            {appleMatrix.length &&
-              appleMatrix.map((r, i) => (
-                <div
-                  className="row d-flex justify-content-center"
-                  key={`appleRow-${i}`}
-                >
-                  {r.map((c, j) => (
-                    <div key={`appleCol-${j}`}>
-                      <div className={`gridSquare ${colors[c]}`}> {c}</div>
-                    </div>
-                  ))}
-                </div>
-              ))}
-          </div>
-        </div>
+        {this.renderGrid()}
       </>
     );
   }
