@@ -173,6 +173,7 @@ class Rivers extends React.Component {
       riverSizes,
       simulationIsRunning: false,
       simulationIsComplete: true,
+      currNode: [-1, -1],
     });
   };
 

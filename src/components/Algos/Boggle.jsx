@@ -200,6 +200,7 @@ class Boggle extends React.Component {
       foundWords,
       simulationIsComplete: true,
       simulationIsRunning: false,
+      currNode: [-1, -1],
     });
   };
 
@@ -220,6 +221,7 @@ class Boggle extends React.Component {
     node = node[char];
     if ("*" in node) {
       foundWords[node["*"]] = true;
+      this.setState({ foundWords });
       wordIsFound = true;
       location.charInWord = true;
     }
