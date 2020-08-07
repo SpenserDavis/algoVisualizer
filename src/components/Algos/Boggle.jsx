@@ -88,6 +88,7 @@ class Boggle extends React.Component {
   }
 
   randomizeBoardAndWords = () => {
+    this.setState({ simulationIsComplete: false });
     const targetWords = [];
     for (let letterCountKey in wordList) {
       const randIdx = Math.floor(
@@ -147,7 +148,7 @@ class Boggle extends React.Component {
     location.char = currChar;
     if (currCharIdx === currWord.length - 1) {
       location.visiting = false;
-      location.charInWord = true;
+
       return true;
     }
 
@@ -162,7 +163,7 @@ class Boggle extends React.Component {
       );
       if (wordHasBeenAdded) {
         location.visiting = false;
-        location.charInWord = true;
+
         return true;
       }
     }
@@ -175,14 +176,16 @@ class Boggle extends React.Component {
   populateEmptyCells = (board) => {
     for (let i = 0; i < board.length; i++) {
       for (let j = 0; j < board[0].length; j++) {
-        if (board[i][j] === "") {
-          board[i][j] = charList[Math.floor(Math.random() * charList.length)];
+        if (board[i][j].char === "") {
+          board[i][j].char =
+            charList[Math.floor(Math.random() * charList.length)];
         }
       }
     }
   };
 
   findWords = () => {
+    this.setState({ simulationIsRunning: true });
     const { board, targetWords } = this.state;
     const trie = new Trie(targetWords);
     const foundWords = {};
@@ -193,10 +196,15 @@ class Boggle extends React.Component {
       }
     }
 
-    this.setState({ foundWords });
+    this.setState({
+      foundWords,
+      simulationIsComplete: true,
+      simulationIsRunning: false,
+    });
   };
 
   exploreNode = (board, i, j, node, foundWords) => {
+    let wordIsFound = false;
     const location = board[i][j];
     if (location.visiting) {
       return;
@@ -210,13 +218,20 @@ class Boggle extends React.Component {
     node = node[char];
     if ("*" in node) {
       foundWords[node["*"]] = true;
+      wordIsFound = true;
+      location.charInWord = true;
     }
 
     for (let [x, y] of this.getUnvisitedNeighbors(board, i, j)) {
-      this.exploreNode(board, x, y, node, foundWords);
+      let anotherWordIsFound = this.exploreNode(board, x, y, node, foundWords);
+      if (anotherWordIsFound) {
+        location.charInWord = true;
+        wordIsFound = true;
+      }
     }
 
     location.visiting = false;
+    return wordIsFound;
   };
 
   getUnvisitedNeighbors = (board, i, j) => {
@@ -269,6 +284,21 @@ class Boggle extends React.Component {
     return neighbors;
   };
 
+  getSquareStyles = (i, j) => {
+    const { currNode, board } = this.state;
+    const location = board[i][j];
+    const [x, y] = currNode;
+    const currNodeClass = i === x && j === y ? "currNode" : "";
+
+    const visitingNodeClass = location.visiting ? "visitingNode" : "";
+
+    const colorClass = location.charInWord
+      ? colors["word"]
+      : colors["gibberish"];
+    const wordNode = location.charInWord ? "wordNode" : "";
+    return `gridSquare ${colorClass} ${currNodeClass} ${visitingNodeClass} ${wordNode}`;
+  };
+
   renderButtonRow = () => {
     const {
       simulationIsRunning,
@@ -301,28 +331,13 @@ class Boggle extends React.Component {
               simulationIsComplete ? "simCompleteBox" : ""
             }`}
           >
-            Found Words:{" "}
+            Found Words: <br></br>
             {(simulationIsRunning || simulationIsComplete) &&
-              `[${Object.keys(foundWords).toString()}]`}
+              `[${Object.keys(foundWords).join(", ")}]`}
           </h6>
         </div>
       </div>
     );
-  };
-
-  getSquareStyles = (i, j) => {
-    const { currNode, board } = this.state;
-    const location = board[i][j];
-    const [x, y] = currNode;
-    const currNodeClass = i === x && j === y ? "currNode" : "";
-
-    const visitingNodeClass = location.visiting ? "visitingNode" : "";
-
-    const colorClass = location.charInWord
-      ? colors["word"]
-      : colors["gibberish"];
-    const wordNode = location.charInWord ? "wordNode" : "";
-    return `gridSquare ${colorClass} ${currNodeClass} ${visitingNodeClass} ${wordNode}`;
   };
 
   renderGrid = () => {
