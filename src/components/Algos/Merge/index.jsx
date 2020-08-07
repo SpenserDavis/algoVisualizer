@@ -1,6 +1,7 @@
 import React from "react";
-import description from "../../algoProblemDescriptions/merge";
-import AlgoHeader from "../AlgoHeader";
+import description from "../../../algoProblemDescriptions/merge";
+import AlgoHeader from "../../AlgoHeader";
+import Arrow from "./Arrow";
 
 class LinkedList {
   constructor(value) {
@@ -51,6 +52,7 @@ class Merge extends React.Component {
   };
 
   performMerge = (headOne, headTwo) => {
+    this.setState({ simulationIsRunning: true });
     let p1 = headOne;
     let p2 = headTwo;
     let p1Prev = null;
@@ -72,7 +74,7 @@ class Merge extends React.Component {
     if (!p1) {
       p1Prev.next = p2;
     }
-
+    this.setState({ simulationIsRunning: false, simulationIsComplete: true });
     return headOne.value < headTwo.value ? headOne : headTwo;
   };
 
@@ -107,7 +109,12 @@ class Merge extends React.Component {
 
   renderLists = (...lists) => {
     const { listSize } = this.state;
-    const svgWidth = (800 - (listSize + 1 * 50)) / listSize;
+
+    //static for now
+    const rowWidth = 800;
+    const nodeWidth = 50;
+
+    const width = (rowWidth - (listSize + 1 * nodeWidth)) / listSize;
     const html = [];
     for (let list of lists) {
       const row = [];
@@ -117,28 +124,7 @@ class Merge extends React.Component {
         row.push(
           <>
             <div className="gridSquare">{curr.value}</div>
-            <svg height="50" width={svgWidth - 50}>
-              <defs>
-                <marker
-                  id="markerArrow"
-                  markerWidth="13"
-                  markerHeight="13"
-                  refX="2"
-                  refY="6"
-                  orient="auto"
-                >
-                  <path d="M2,2 L2,11 L10,6 L2,2" style={{ fill: "#000000" }} />
-                </marker>
-              </defs>
-
-              <line
-                x1="0"
-                y1="25"
-                x2={svgWidth - 66}
-                y2="25"
-                className="arrow"
-              />
-            </svg>
+            <Arrow width={width} direction="horizontal" />
           </>
         );
         curr = curr.next;
