@@ -10,8 +10,6 @@ const gridWidth = 15;
 const emptyChance = 15;
 const rottenChance = 15;
 
-const sleepDelay = 100;
-
 const initialStatePresets = {
   simulationIsRunning: false,
   simulationIsComplete: false,
@@ -137,7 +135,7 @@ class Apples extends React.Component {
     }
     this.setState({ appleMatrix: matrix });
     if (infectionDidOccur) {
-      await sleep(sleepDelay);
+      await sleep(this.props.speed);
     }
     return infectedNeighbors;
   };

@@ -67,8 +67,6 @@ const colors = { word: "brown", gibberish: "white" };
 const gridHeight = 7;
 const gridWidth = 15;
 
-const sleepDelay = 50;
-
 const initialStatePresets = {
   simulationIsRunning: false,
   simulationIsComplete: false,
@@ -206,7 +204,7 @@ class Boggle extends React.Component {
 
   exploreNode = async (board, i, j, node, foundWords) => {
     this.setState({ currNode: [i, j] });
-    await sleep(sleepDelay);
+    await sleep(this.props.speed);
     let wordIsFound = false;
     const location = board[i][j];
     if (location.visiting) {

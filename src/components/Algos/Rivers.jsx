@@ -8,8 +8,6 @@ const colors = { 0: "white", 1: "blue" };
 const gridHeight = 7;
 const gridWidth = 15;
 
-const sleepDelay = 75;
-
 const initialStatePresets = {
   simulationIsRunning: false,
   simulationIsComplete: false,
@@ -185,7 +183,7 @@ class Rivers extends React.Component {
     while (nodesToExplore.length) {
       const [x, y] = nodesToExplore.shift();
       this.setState({ currNode: [x, y] });
-      await sleep(sleepDelay);
+      await sleep(this.props.speed);
       if (visited[x][y]) {
         continue;
       }
