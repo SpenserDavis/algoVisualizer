@@ -77,12 +77,20 @@ const initialStatePresets = {
 };
 
 class Boggle extends React.Component {
-  state = {
-    ...initialStatePresets,
-  };
+  constructor(props) {
+    super(props);
+    this._isMounted = true;
+    this.state = {
+      ...initialStatePresets,
+    };
+  }
 
   componentDidMount() {
     this.randomizeBoardAndWords();
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   randomizeBoardAndWords = () => {
@@ -194,16 +202,17 @@ class Boggle extends React.Component {
       }
     }
 
-    this.setState({
-      foundWords,
-      simulationIsComplete: true,
-      simulationIsRunning: false,
-      currNode: [-1, -1],
-    });
+    this._isMounted &&
+      this.setState({
+        foundWords,
+        simulationIsComplete: true,
+        simulationIsRunning: false,
+        currNode: [-1, -1],
+      });
   };
 
   exploreNode = async (board, i, j, node, foundWords) => {
-    this.setState({ currNode: [i, j] });
+    this._isMounted && this.setState({ currNode: [i, j] });
     await sleep(this.props.speed);
     let wordIsFound = false;
     const location = board[i][j];
@@ -219,7 +228,7 @@ class Boggle extends React.Component {
     node = node[char];
     if ("*" in node) {
       foundWords[node["*"]] = true;
-      this.setState({ foundWords });
+      this._isMounted && this.setState({ foundWords });
       wordIsFound = true;
       location.charInWord = true;
     }

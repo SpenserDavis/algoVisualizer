@@ -17,10 +17,18 @@ const initialStatePresets = {
 };
 
 class Rivers extends React.Component {
-  state = { riverMatrix: [], ...initialStatePresets };
+  constructor(props) {
+    super(props);
+    this._isMounted = true;
+    this.state = { riverMatrix: [], ...initialStatePresets };
+  }
 
   componentDidMount() {
     this.getRandomizedMatrix();
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   getRandomizedRiverSizes = () => {
@@ -166,13 +174,14 @@ class Rivers extends React.Component {
       }
     }
 
-    this.setState({
-      visited,
-      riverSizes,
-      simulationIsRunning: false,
-      simulationIsComplete: true,
-      currNode: [-1, -1],
-    });
+    this._isMounted &&
+      this.setState({
+        visited,
+        riverSizes,
+        simulationIsRunning: false,
+        simulationIsComplete: true,
+        currNode: [-1, -1],
+      });
   };
 
   exploreNode = async (i, j, matrix, riverSizes, visited) => {
@@ -182,7 +191,7 @@ class Rivers extends React.Component {
 
     while (nodesToExplore.length) {
       const [x, y] = nodesToExplore.shift();
-      this.setState({ currNode: [x, y] });
+      this._isMounted && this.setState({ currNode: [x, y] });
       await sleep(this.props.speed);
       if (visited[x][y]) {
         continue;
@@ -197,7 +206,7 @@ class Rivers extends React.Component {
 
     if (currSize) {
       riverSizes.push(currSize);
-      this.setState({ riverSizes });
+      this._isMounted && this.setState({ riverSizes });
     }
   };
 

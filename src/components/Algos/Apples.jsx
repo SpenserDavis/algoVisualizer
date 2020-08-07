@@ -17,13 +17,21 @@ const initialStatePresets = {
 };
 
 class Apples extends React.Component {
-  state = {
-    appleMatrix: [],
-    ...initialStatePresets,
-  };
+  constructor(props) {
+    super(props);
+    this._isMounted = true;
+    this.state = {
+      appleMatrix: [],
+      ...initialStatePresets,
+    };
+  }
 
   componentDidMount() {
     this.getRandomizedMatrix();
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   getRandomizedMatrix = () => {
@@ -57,11 +65,12 @@ class Apples extends React.Component {
         .map((_, i) => appleMatrix[i].slice());
       console.log("a");
       const dayCounter = await this.getNumDays(modifiableMatrix);
-      this.setState({
-        dayCounter,
-        simulationIsRunning: false,
-        simulationIsComplete: true,
-      });
+      this._isMounted &&
+        this.setState({
+          dayCounter,
+          simulationIsRunning: false,
+          simulationIsComplete: true,
+        });
     });
   };
 
@@ -89,7 +98,7 @@ class Apples extends React.Component {
       if (x === -1) {
         if (toTraverse.length) {
           days++;
-          this.setState({ dayCounter: days });
+          this._isMounted && this.setState({ dayCounter: days });
           toTraverse.push([-1, -1]);
         }
       } else {
@@ -133,7 +142,7 @@ class Apples extends React.Component {
       infectionDidOccur = true;
       infectedNeighbors.push([x, y + 1]);
     }
-    this.setState({ appleMatrix: matrix });
+    this._isMounted && this.setState({ appleMatrix: matrix });
     if (infectionDidOccur) {
       await sleep(this.props.speed);
     }
