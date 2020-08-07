@@ -9,13 +9,14 @@ class LinkedList {
   }
 }
 
-const listSize = 5;
+const listSizeLowerBound = 3;
+const listSizeUpperBound = 8;
 
 class Merge extends React.Component {
   constructor(props) {
     super(props);
     this._isMounted = true;
-    this.state = { listOne: {}, listTwo: {} };
+    this.state = { listOne: {}, listTwo: {}, listSize: 0 };
   }
 
   componentDidMount() {
@@ -23,15 +24,20 @@ class Merge extends React.Component {
   }
 
   initializeLists = () => {
-    const listOne = this.generateNewList();
-    const listTwo = this.generateNewList();
-    this.setState({ listOne, listTwo });
+    const listSize = Math.floor(
+      Math.random() * (listSizeUpperBound - listSizeLowerBound) +
+        listSizeLowerBound
+    );
+
+    const listOne = this.generateNewList(listSize);
+    const listTwo = this.generateNewList(listSize);
+    this.setState({ listOne, listTwo, listSize });
   };
 
-  generateNewList = () => {
+  generateNewList = (listSize) => {
     const listHead = this.generateNewNode();
     let curr = listHead;
-    let i = 0;
+    let i = 1;
     while (i++ < listSize) {
       curr.next = this.generateNewNode();
       curr = curr.next;
@@ -100,14 +106,48 @@ class Merge extends React.Component {
   };
 
   renderLists = (...lists) => {
+    const { listSize } = this.state;
+    const svgWidth = (800 - (listSize + 1 * 50)) / listSize;
     const html = [];
     for (let list of lists) {
       const row = [];
       let curr = list;
+      row.push(<div className="gridSquare-null-start"></div>);
       while (curr) {
-        row.push(<div className="gridSquare">{curr.value}</div>);
+        row.push(
+          <>
+            <div className="gridSquare">{curr.value}</div>
+            <svg height="50" width={svgWidth - 50}>
+              <defs>
+                <marker
+                  id="markerArrow"
+                  markerWidth="13"
+                  markerHeight="13"
+                  refX="2"
+                  refY="6"
+                  orient="auto"
+                >
+                  <path d="M2,2 L2,11 L10,6 L2,2" style={{ fill: "#000000" }} />
+                </marker>
+              </defs>
+
+              <line
+                x1="0"
+                y1="25"
+                x2={svgWidth - 66}
+                y2="25"
+                className="arrow"
+              />
+            </svg>
+          </>
+        );
         curr = curr.next;
       }
+      row.push(
+        <div className="gridSquare-null-end d-flex align-items-center">
+          null
+        </div>
+      );
       html.push(
         <div className="row d-flex justify-content-between listRow">{row}</div>
       );
