@@ -67,7 +67,7 @@ const colors = { word: "brown", gibberish: "white" };
 const gridHeight = 7;
 const gridWidth = 15;
 
-const sleepDelay = 75;
+const sleepDelay = 50;
 
 const initialStatePresets = {
   simulationIsRunning: false,
@@ -184,7 +184,7 @@ class Boggle extends React.Component {
     }
   };
 
-  findWords = () => {
+  findWords = async () => {
     this.setState({ simulationIsRunning: true });
     const { board, targetWords } = this.state;
     const trie = new Trie(targetWords);
@@ -192,7 +192,7 @@ class Boggle extends React.Component {
 
     for (let i = 0; i < board.length; i++) {
       for (let j = 0; j < board[0].length; j++) {
-        this.exploreNode(board, i, j, trie.root, foundWords);
+        await this.exploreNode(board, i, j, trie.root, foundWords);
       }
     }
 
@@ -203,7 +203,9 @@ class Boggle extends React.Component {
     });
   };
 
-  exploreNode = (board, i, j, node, foundWords) => {
+  exploreNode = async (board, i, j, node, foundWords) => {
+    this.setState({ currNode: [i, j] });
+    await sleep(sleepDelay);
     let wordIsFound = false;
     const location = board[i][j];
     if (location.visiting) {
@@ -223,7 +225,13 @@ class Boggle extends React.Component {
     }
 
     for (let [x, y] of this.getUnvisitedNeighbors(board, i, j)) {
-      let anotherWordIsFound = this.exploreNode(board, x, y, node, foundWords);
+      let anotherWordIsFound = await this.exploreNode(
+        board,
+        x,
+        y,
+        node,
+        foundWords
+      );
       if (anotherWordIsFound) {
         location.charInWord = true;
         wordIsFound = true;
