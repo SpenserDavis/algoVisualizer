@@ -90,6 +90,9 @@
 .gridSquare.black {
   background-color: black;
 }
+.gridSquare.brown {
+  background-color: rgb(175, 92, 54);
+}
 
 .grid {
   margin-top: 20px;
@@ -111,4 +114,13 @@
 
 .visitedNode.riverNode {
   background-color: rgb(0, 119, 255) !important;
+}
+
+#target-words {
+  margin-top: 10px;
+}
+
+#target-words > strong {
+  padding-right: 10px;
+  align-self: flex-end;
 }

@@ -62,7 +62,7 @@ const charList = [
   "z",
 ];
 
-const colors = { 0: "white", 1: "blue" };
+const colors = { word: "brown", gibberish: "white" };
 
 const gridHeight = 7;
 const gridWidth = 15;
@@ -73,7 +73,6 @@ const initialStatePresets = {
   simulationIsRunning: false,
   simulationIsComplete: false,
   board: [],
-  visiting: [],
   currNode: [-1, -1],
   foundWords: {},
   targetWords: [],
@@ -97,12 +96,16 @@ class Boggle extends React.Component {
 
       targetWords.push(wordList[letterCountKey][randIdx]);
     }
-
+    const cellTemplate = {
+      char: "",
+      visiting: false,
+      charInWord: false,
+    };
     const board = new Array(gridHeight)
       .fill("")
-      .map((_) => new Array(gridWidth).fill(""));
-
-    const visiting = board.slice().map((row) => row.map((char) => false));
+      .map((row) =>
+        new Array(gridWidth).fill(0).map((v) => ({ ...cellTemplate }))
+      );
 
     let targetWordIdx = 0;
     while (targetWordIdx < targetWords.length) {
@@ -113,14 +116,7 @@ class Boggle extends React.Component {
         const i = Math.floor(Math.random() * gridHeight);
         const j = Math.floor(Math.random() * gridWidth);
 
-        wordHasBeenAdded = this.tryPlaceWord(
-          i,
-          j,
-          board,
-          visiting,
-          currWord,
-          0
-        );
+        wordHasBeenAdded = this.tryPlaceWord(i, j, board, currWord, 0);
 
         if (wordHasBeenAdded) {
           targetWordIdx++;
@@ -130,45 +126,49 @@ class Boggle extends React.Component {
 
     this.populateEmptyCells(board);
 
-    this.setState({ targetWords, board, visiting });
+    this.setState({ targetWords, board });
   };
 
-  tryPlaceWord = (i, j, board, visiting, currWord, currCharIdx) => {
-    if (visiting[i][j]) {
+  tryPlaceWord = (i, j, board, currWord, currCharIdx) => {
+    // debugger;
+    const location = board[i][j];
+    if (location.visiting) {
       return false;
     }
     const currChar = currWord[currCharIdx];
 
-    if (board[i][j] !== "" && board[i][j] !== currChar) {
+    if (location.char !== "" && location.char !== currChar) {
       return false;
     }
-    visiting[i][j] = true;
+    location.visiting = true;
 
     let wordHasBeenAdded = false;
-    board[i][j] = currChar;
+    const prevChar = location.char;
+    location.char = currChar;
     if (currCharIdx === currWord.length - 1) {
-      visiting[i][j] = false;
+      location.visiting = false;
+      location.charInWord = true;
       return true;
     }
-    const neighbors = shuffle(
-      this.getUnvisitedNeighbors(board, i, j, visiting)
-    );
+
+    const neighbors = shuffle(this.getUnvisitedNeighbors(board, i, j));
     for (let [x, y] of neighbors) {
       wordHasBeenAdded = this.tryPlaceWord(
         x,
         y,
         board,
-        visiting,
         currWord,
         currCharIdx + 1
       );
       if (wordHasBeenAdded) {
-        visiting[i][j] = false;
+        location.visiting = false;
+        location.charInWord = true;
         return true;
       }
     }
 
-    visiting[i][j] = false;
+    location.char = prevChar;
+    location.visiting = false;
     return false;
   };
 
@@ -182,76 +182,78 @@ class Boggle extends React.Component {
     }
   };
 
-  findWords = (board, words) => {
-    const trie = new Trie(words);
+  findWords = () => {
+    const { board, targetWords } = this.state;
+    const trie = new Trie(targetWords);
     const foundWords = {};
-    const visiting = board.map((r) => r.map((c) => false));
+
     for (let i = 0; i < board.length; i++) {
       for (let j = 0; j < board[0].length; j++) {
-        this.exploreNode(board, i, j, visiting, trie.root, foundWords);
+        this.exploreNode(board, i, j, trie.root, foundWords);
       }
     }
 
-    return Object.keys(foundWords);
+    this.setState({ foundWords });
   };
 
-  exploreNode = (board, i, j, visiting, node, foundWords) => {
-    if (visiting[i][j]) {
+  exploreNode = (board, i, j, node, foundWords) => {
+    const location = board[i][j];
+    if (location.visiting) {
       return;
     }
 
-    const char = board[i][j];
+    const { char } = location;
     if (!(char in node)) {
       return;
     }
-    visiting[i][j] = true;
+    location.visiting = true;
     node = node[char];
     if ("*" in node) {
       foundWords[node["*"]] = true;
     }
 
-    for (let [x, y] of this.getUnvisitedNeighbors(board, i, j, visiting)) {
-      this.exploreNode(board, x, y, visiting, node, foundWords);
+    for (let [x, y] of this.getUnvisitedNeighbors(board, i, j)) {
+      this.exploreNode(board, x, y, node, foundWords);
     }
 
-    visiting[i][j] = false;
+    location.visiting = false;
   };
 
-  getUnvisitedNeighbors = (board, i, j, visiting) => {
+  getUnvisitedNeighbors = (board, i, j) => {
     const neighbors = [];
 
     //topleft
-    if (i > 0 && j > 0 && !visiting[i - 1][j - 1]) {
+    if (i > 0 && j > 0 && !board[i - 1][j - 1].visiting) {
       neighbors.push([i - 1, j - 1]);
     }
 
     //top
-    if (i > 0 && !visiting[i - 1][j]) {
+    if (i > 0 && !board[i - 1][j].visiting) {
       neighbors.push([i - 1, j]);
     }
 
     //topright
-    if (i > 0 && j < board[0].length - 1 && !visiting[i - 1][j + 1]) {
+    if (i > 0 && j < board[0].length - 1 && !board[i - 1][j + 1].visiting) {
       neighbors.push([i - 1, j + 1]);
     }
 
     //left
-    if (j > 0 && !visiting[i][j - 1]) {
+    if (j > 0 && !board[i][j - 1].visiting) {
       neighbors.push([i, j - 1]);
     }
 
     //right
-    if (j < board[0].length - 1 && !visiting[i][j + 1]) {
+    if (j < board[0].length - 1 && !board[i][j + 1].visiting) {
       neighbors.push([i, j + 1]);
     }
 
     //bottomleft
-    if (i < board.length - 1 && j > 0 && !visiting[i + 1][j - 1]) {
+    if (i < board.length - 1 && j > 0 && !board[i + 1][j - 1].visiting) {
       neighbors.push([i + 1, j - 1]);
     }
 
     //bottom
-    if (i < board.length - 1 && !visiting[i + 1][j]) {
+    if (i < board.length - 1 && !board[i + 1][j].visiting) {
       neighbors.push([i + 1, j]);
     }
 
@@ -259,7 +261,7 @@ class Boggle extends React.Component {
     if (
       i < board.length - 1 &&
       j < board[0].length - 1 &&
-      !visiting[i + 1][j + 1]
+      !board[i + 1][j + 1].visiting
     ) {
       neighbors.push([i + 1, j + 1]);
     }
@@ -267,9 +269,84 @@ class Boggle extends React.Component {
     return neighbors;
   };
 
-  renderButtonRow = () => {};
+  renderButtonRow = () => {
+    const {
+      simulationIsRunning,
+      simulationIsComplete,
+      foundWords,
+    } = this.state;
+    return (
+      <div className="row d-flex justify-content-between">
+        <div className="col d-flex justify-content-center">
+          <button
+            disabled={simulationIsRunning}
+            onClick={this.randomizeBoardAndWords}
+            className="btn btn-primary"
+          >
+            Randomize Board
+          </button>
+        </div>
+        <div className="col d-flex justify-content-center">
+          <button
+            disabled={simulationIsRunning || simulationIsComplete}
+            onClick={this.findWords}
+            className="btn btn-success"
+          >
+            Run Simulation
+          </button>
+        </div>
+        <div className="col d-flex justify-content-center align-items-end">
+          <h6
+            className={`no-wrap ${
+              simulationIsComplete ? "simCompleteBox" : ""
+            }`}
+          >
+            Found Words:{" "}
+            {(simulationIsRunning || simulationIsComplete) &&
+              `[${Object.keys(foundWords).toString()}]`}
+          </h6>
+        </div>
+      </div>
+    );
+  };
 
-  renderGrid = () => {};
+  getSquareStyles = (i, j) => {
+    const { currNode, board } = this.state;
+    const location = board[i][j];
+    const [x, y] = currNode;
+    const currNodeClass = i === x && j === y ? "currNode" : "";
+
+    const visitingNodeClass = location.visiting ? "visitingNode" : "";
+
+    const colorClass = location.charInWord
+      ? colors["word"]
+      : colors["gibberish"];
+    const wordNode = location.charInWord ? "wordNode" : "";
+    return `gridSquare ${colorClass} ${currNodeClass} ${visitingNodeClass} ${wordNode}`;
+  };
+
+  renderGrid = () => {
+    const { board } = this.state;
+    return (
+      <div className="row grid">
+        <div className="col">
+          {board.length &&
+            board.map((r, i) => (
+              <div
+                className="row d-flex justify-content-center"
+                key={`boardRow-${i}`}
+              >
+                {r.map((o, j) => (
+                  <div key={`boardCol-${j}`}>
+                    <div className={this.getSquareStyles(i, j)}> {o.char}</div>
+                  </div>
+                ))}
+              </div>
+            ))}
+        </div>
+      </div>
+    );
+  };
 
   render() {
     return (
@@ -277,6 +354,10 @@ class Boggle extends React.Component {
         <>
           <AlgoHeader title="Boggle Board" description={description} />
           {this.renderButtonRow()}
+          <div id="target-words" className="row d-flex align-items-start">
+            <strong className="no-wrap">Target Words: </strong>
+            <span>{this.state.targetWords.join(", ")}</span>
+          </div>
           {this.renderGrid()}
         </>
       </div>
