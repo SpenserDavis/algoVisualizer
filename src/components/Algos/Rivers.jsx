@@ -1,7 +1,7 @@
 import React from "react";
 import description from "../../algoProblemDescriptions/rivers";
 import AlgoHeader from "../../components/AlgoHeader";
-import { sleep } from "../../services/utilities";
+import { sleep, shuffle } from "../../services/utilities";
 
 const colors = { 0: "white", 1: "blue" };
 
@@ -16,17 +16,6 @@ const initialStatePresets = {
   riverSizes: [],
   visited: [],
   currNode: [-1, -1],
-};
-
-const shuffle = (arr) => {
-  let j, x, i;
-  for (i = arr.length - 1; i > 0; i--) {
-    j = Math.floor(Math.random() * (i + 1));
-    x = arr[i];
-    arr[i] = arr[j];
-    arr[j] = x;
-  }
-  return arr;
 };
 
 class Rivers extends React.Component {

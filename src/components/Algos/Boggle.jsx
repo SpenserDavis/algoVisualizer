@@ -1,7 +1,7 @@
 import React from "react";
 import description from "../../algoProblemDescriptions/boggle";
 import AlgoHeader from "../../components/AlgoHeader";
-import { sleep } from "../../services/utilities";
+import { sleep, shuffle } from "../../services/utilities";
 
 class Trie {
   constructor(words) {
@@ -33,6 +33,35 @@ const wordList = {
   6: ["status", "tether", "upward", "voting", "winnow", "yankee", "zygote"],
 };
 
+const charList = [
+  "a",
+  "b",
+  "c",
+  "d",
+  "e",
+  "f",
+  "g",
+  "h",
+  "i",
+  "j",
+  "k",
+  "l",
+  "m",
+  "n",
+  "o",
+  "p",
+  "q",
+  "r",
+  "s",
+  "t",
+  "u",
+  "v",
+  "w",
+  "x",
+  "y",
+  "z",
+];
+
 const colors = { 0: "white", 1: "blue" };
 
 const gridHeight = 7;
@@ -46,14 +75,112 @@ const initialStatePresets = {
   board: [],
   visiting: [],
   currNode: [-1, -1],
+  foundWords: {},
+  targetWords: [],
 };
 
 class Boggle extends React.Component {
+  state = {
+    ...initialStatePresets,
+  };
+
   componentDidMount() {
     this.randomizeBoardAndWords();
   }
 
-  randomizeBoardAndWords = () => {};
+  randomizeBoardAndWords = () => {
+    const targetWords = [];
+    for (let letterCountKey in wordList) {
+      const randIdx = Math.floor(
+        Math.random() * wordList[letterCountKey].length
+      );
+
+      targetWords.push(wordList[letterCountKey][randIdx]);
+    }
+
+    const board = new Array(gridHeight)
+      .fill("")
+      .map((_) => new Array(gridWidth).fill(""));
+
+    const visiting = board.slice().map((row) => row.map((char) => false));
+
+    let targetWordIdx = 0;
+    while (targetWordIdx < targetWords.length) {
+      const currWord = targetWords[targetWordIdx].split("");
+
+      let wordHasBeenAdded = false;
+      while (!wordHasBeenAdded) {
+        const i = Math.floor(Math.random() * gridHeight);
+        const j = Math.floor(Math.random() * gridWidth);
+
+        wordHasBeenAdded = this.tryPlaceWord(
+          i,
+          j,
+          board,
+          visiting,
+          currWord,
+          0
+        );
+
+        if (wordHasBeenAdded) {
+          targetWordIdx++;
+        }
+      }
+    }
+
+    this.populateEmptyCells(board);
+
+    this.setState({ targetWords, board, visiting });
+  };
+
+  tryPlaceWord = (i, j, board, visiting, currWord, currCharIdx) => {
+    if (visiting[i][j]) {
+      return false;
+    }
+    const currChar = currWord[currCharIdx];
+
+    if (board[i][j] !== "" && board[i][j] !== currChar) {
+      return false;
+    }
+    visiting[i][j] = true;
+
+    let wordHasBeenAdded = false;
+    board[i][j] = currChar;
+    if (currCharIdx === currWord.length - 1) {
+      visiting[i][j] = false;
+      return true;
+    }
+    const neighbors = shuffle(
+      this.getUnvisitedNeighbors(board, i, j, visiting)
+    );
+    for (let [x, y] of neighbors) {
+      wordHasBeenAdded = this.tryPlaceWord(
+        x,
+        y,
+        board,
+        visiting,
+        currWord,
+        currCharIdx + 1
+      );
+      if (wordHasBeenAdded) {
+        visiting[i][j] = false;
+        return true;
+      }
+    }
+
+    visiting[i][j] = false;
+    return false;
+  };
+
+  populateEmptyCells = (board) => {
+    for (let i = 0; i < board.length; i++) {
+      for (let j = 0; j < board[0].length; j++) {
+        if (board[i][j] === "") {
+          board[i][j] = charList[Math.floor(Math.random() * charList.length)];
+        }
+      }
+    }
+  };
 
   findWords = (board, words) => {
     const trie = new Trie(words);
@@ -104,7 +231,6 @@ class Boggle extends React.Component {
     }
 
     //topright
-
     if (i > 0 && j < board[0].length - 1 && !visiting[i - 1][j + 1]) {
       neighbors.push([i - 1, j + 1]);
     }
