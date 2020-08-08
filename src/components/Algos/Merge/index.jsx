@@ -23,8 +23,11 @@ class Merge extends React.Component {
       listOne: {},
       listTwo: {},
       p1: [-1, -1],
+      p1Next: [-1, -1],
       p2: [-1, -1],
+      p2Next: [-1, -1],
       p1Prev: [-1, -1],
+      p1PrevNext: [-1, -1],
       simulationIsRunning: false,
       simulationIsComplete: false,
     };
@@ -73,27 +76,82 @@ class Merge extends React.Component {
       p1: [0, 2],
       p2: [4, 2],
       p1Prev: [0, 0],
+      p1Next: [0, 4],
+      p1PrevNext: [-1, -1],
+      p2Next: [4, 4],
     });
-    await sleep(this.props.speed);
+    await sleep(this.props.speed + 1000);
 
-    let { p1, p2, p1Prev } = this.state;
+    const {
+      p1,
+      p2,
+      p1Prev,
+      p1Next,
+      p2Next,
+      p1PrevNext,
+      listOne,
+      listTwo,
+    } = this.state;
 
-    while (this.areLastNullCells(p1[1]) && this.areLastNullCells(p2[1])) {
-      if (p1.value < p2.value) {
-        p1Prev = p1;
-        p1 = p1.next;
+    let l1 = listOne;
+    let l2 = listTwo;
+    let l1Prev = null;
+    let newP2;
+    while (!this.areLastNullCells(p1[1]) && !this.areLastNullCells(p2[1])) {
+      let currP1Row,
+        currP1Col,
+        currP2Row,
+        currP2Col,
+        currP1PrevRow,
+        currP1PrevCol;
+
+      const { p1PrevNext, p1Next, p2Next } = this.state;
+
+      if (p1) {
+        [currP1Row, currP1Col] = p1;
+      }
+      if (p2) {
+        [currP2Row, currP2Col] = p2;
+      }
+      if (p1Prev) {
+        [currP1PrevRow, currP1PrevCol] = p1Prev;
+      }
+
+      debugger;
+      if (l1.value < l2.value) {
+        l1Prev = l1;
+        let newP1 = p1;
+        this.setState({ p1Prev: newP1 });
+        await sleep(this.props.speed + 1000);
+        l1 = l1.next;
+
+        this.setState({ p1: [currP1Row, currP1Col + 2] });
+        await sleep(this.props.speed + 1000);
       } else {
-        if (p1Prev) {
-          p1Prev.next = p2;
+        if (l1Prev) {
+          l1Prev.next = l2;
+          newP2 = p2;
+          this.setState({ p1PrevNext: newP2 });
+          await sleep(this.props.speed + 1000);
         }
-        p1Prev = p2;
-        p2 = p2.next;
-        p1Prev.next = p1;
+        l1Prev = l2;
+        this.setState({ p1Prev: newP2 });
+        await sleep(this.props.speed + 1000);
+        l2 = l2.next;
+        let newP2Next = p2Next;
+        this.setState({ p2: newP2Next });
+        await sleep(this.props.speed + 1000);
+        l1Prev.next = l1;
+        let newP1 = p1;
+        this.setState({ p1PrevNext: newP1 });
+        await sleep(this.props.speed + 1000);
       }
     }
 
-    if (!p1) {
-      p1Prev.next = p2;
+    if (!l1) {
+      l1Prev.next = l2;
+      this.setState({ p1PrevNext: newP2 });
+      await sleep(this.props.speed + 1000);
     }
     this.setState({ simulationIsRunning: false, simulationIsComplete: true });
   };
