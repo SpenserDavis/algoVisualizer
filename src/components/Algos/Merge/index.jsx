@@ -25,11 +25,8 @@ class Merge extends React.Component {
       listTwo: {},
       arrows: [],
       p1: [-1, -1],
-      p1Next: [-1, -1],
       p2: [-1, -1],
-      p2Next: [-1, -1],
       p1Prev: [-1, -1],
-      p1PrevNext: [-1, -1],
       simulationIsRunning: false,
       simulationIsComplete: false,
     };
@@ -100,62 +97,82 @@ class Merge extends React.Component {
       p1: [0, 2],
       p2: [4, 2],
       p1Prev: [0, 0],
-      p1Next: [0, 4],
-      p1PrevNext: [-1, -1],
-      p2Next: [4, 4],
     });
     await sleep(this.props.speed + 1000);
 
-    const {
-      p1,
-      p2,
-      p1Prev,
-      p1Next,
-      p2Next,
-      p1PrevNext,
-      listOne,
-      listTwo,
-    } = this.state;
+    const { p1, p2, p1Prev, listOne, listTwo } = this.state;
 
     let l1 = this.copyList(listOne, 1);
     let l2 = this.copyList(listTwo, 2);
 
     let l1Prev = null;
-    let newP2;
+
+    const arrows = this.state.arrows.slice();
+    let [currP1Row, currP1Col] = p1;
+
+    let [currP2Row, currP2Col] = p2;
+
+    let [currP1PrevRow, currP1PrevCol] = p1Prev;
+    let direction;
     while (!this.areLastNullCells(p1[1]) && !this.areLastNullCells(p2[1])) {
-      const { p1PrevNext, p1Next, p2Next } = this.state;
-
-      const [currP1Row, currP1Col] = p1;
-
-      const [currP2Row, currP2Col] = p2;
-
-      const [currP1PrevRow, currP1PrevCol] = p1Prev;
-
+      debugger;
       if (l1.value < l2.value) {
         l1Prev = l1;
 
         this.setState({ p1Prev: p1 });
+        currP1PrevCol = currP1Col;
+        currP1PrevRow = currP1Row;
         await sleep(this.props.speed + 1000);
         l1 = l1.next;
-        //not same row potentially
-        this.setState({ p1: [currP1Row, currP1Col + 2] });
+
+        this.setState({ p1: [0, currP1Col + 2] });
+        currP1Col += 2;
         await sleep(this.props.speed + 1000);
       } else {
         if (l1Prev) {
           l1Prev.next = l2;
-
+          if (currP1PrevRow === currP2Row) {
+            direction = "horizontal";
+          } else {
+            if (currP1PrevCol === currP2Col) {
+              direction = "vertical-down";
+            } else {
+              direction = "diagonal-down";
+            }
+          }
+          if (direction !== "horizontal") {
+            arrows[currP1PrevRow === 0 ? 1 : 3][currP1PrevCol + 1] = "";
+            arrows[2][currP1PrevCol + 1] = direction;
+          }
           this.setState({ arrows });
           await sleep(this.props.speed + 1000);
         }
         l1Prev = l2;
         this.setState({ p1Prev: p2 });
+        currP1PrevCol = currP2Col;
+        currP1PrevRow = currP2Row;
         await sleep(this.props.speed + 1000);
         l2 = l2.next;
 
-        this.setState({ p2: [currP2Row, currP2Col + 2] });
+        this.setState({ p2: [4, currP2Col + 2] });
+        currP2Col += 2;
         await sleep(this.props.speed + 1000);
         l1Prev.next = l1;
-
+        if (currP1PrevRow === currP1Row) {
+          direction = "horizontal";
+        } else {
+          if (currP1PrevCol === currP1Col) {
+            direction = "vertical-up";
+          } else {
+            direction = "diagonal-up";
+          }
+        }
+        if (direction !== "horizontal") {
+          arrows[currP1PrevRow === 0 ? 1 : 3][currP1PrevCol + 1] = "";
+          arrows[2][
+            direction === "vertical-up" ? currP1PrevCol : currP1PrevCol + 1
+          ] = direction;
+        }
         this.setState({ arrows });
         await sleep(this.props.speed + 1000);
       }
@@ -163,6 +180,21 @@ class Merge extends React.Component {
 
     if (!l1) {
       l1Prev.next = l2;
+      if (currP1PrevRow === currP2Row) {
+        direction = "horizontal";
+      } else {
+        if (currP1PrevCol === currP2Col) {
+          direction = "vertical-down";
+        } else {
+          direction = "diagonal-down";
+        }
+      }
+      if (direction !== "horizontal") {
+        arrows[currP1PrevRow][currP1PrevCol + 1] = "";
+        arrows[2][
+          direction === "vertical-down" ? currP1PrevCol : currP1PrevCol + 1
+        ] = direction;
+      }
       this.setState({ arrows });
       await sleep(this.props.speed + 1000);
     }

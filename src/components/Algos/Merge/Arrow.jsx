@@ -7,13 +7,41 @@ const Arrow = ({ dims, direction }) => {
   };
 
   const computeArrowDims = () => {
-    return {
-      x1: "5",
-      y1: `${dims / 2}`,
-      x2: `${dims / 1.5}`,
-      y2: `${dims / 2}`,
-    };
-    // return { x1: "0", y1: "50", x2: `${width - 50}`, y2: "110" };
+    let x1, y1, x2, y2;
+    switch (direction) {
+      case "horizontal":
+        x1 = "5";
+        y1 = `${dims / 2}`;
+        x2 = `${dims / 1.5}`;
+        y2 = `${dims / 2}`;
+        break;
+      case "vertical-down":
+        x1 = `${dims / 2}`;
+        y1 = `5`;
+        x2 = `${dims / 2}`;
+        y2 = `${dims - 20}`;
+        break;
+      case "vertical-up":
+        x1 = `${dims / 2}`;
+        y1 = `${dims - 5}`;
+        x2 = `${dims / 2}`;
+        y2 = `20`;
+        break;
+      case "diagonal-up":
+        x1 = "5";
+        y1 = `${dims - 5}`;
+        x2 = `${dims / 1.4}`;
+        y2 = `20`;
+        break;
+      case "diagonal-down":
+        x1 = "5";
+        y1 = `5`;
+        x2 = `${dims / 1.4}`;
+        y2 = `${dims / 1.4}`;
+        break;
+    }
+
+    return { x1, y1, x2, y2 };
   };
 
   return (
