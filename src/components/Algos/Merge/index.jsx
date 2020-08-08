@@ -2,6 +2,7 @@ import React from "react";
 import description from "../../../algoProblemDescriptions/merge";
 import AlgoHeader from "../../AlgoHeader";
 import Arrow from "./Arrow";
+import { sleep } from "../../../services/utilities";
 
 class LinkedList {
   constructor(value) {
@@ -66,13 +67,18 @@ class Merge extends React.Component {
     return node;
   };
 
-  performMerge = (headOne, headTwo) => {
-    this.setState({ simulationIsRunning: true });
-    let p1 = headOne;
-    let p2 = headTwo;
-    let p1Prev = null;
+  performMerge = async () => {
+    this.setState({
+      simulationIsRunning: true,
+      p1: [0, 2],
+      p2: [4, 2],
+      p1Prev: [0, 0],
+    });
+    await sleep(this.props.speed);
 
-    while (p1 && p2) {
+    let { p1, p2, p1Prev } = this.state;
+
+    while (this.areLastNullCells(p1[1]) && this.areLastNullCells(p2[1])) {
       if (p1.value < p2.value) {
         p1Prev = p1;
         p1 = p1.next;
@@ -90,7 +96,118 @@ class Merge extends React.Component {
       p1Prev.next = p2;
     }
     this.setState({ simulationIsRunning: false, simulationIsComplete: true });
-    return headOne.value < headTwo.value ? headOne : headTwo;
+  };
+
+  getSquareStyle = (i, j) => {
+    let style = "gridSquare-node ";
+
+    if (this.isNodeCell(i, j)) {
+      style += "border-black";
+    }
+    return style;
+  };
+
+  isFirstNullCell = (i, j) => {
+    return i === 1 && j === 0;
+  };
+
+  areLastNullCells = (j) => {
+    return j === gridWidth - 1;
+  };
+
+  isArrowCell = (i, j) => {
+    return i % 2 !== 0 && j % 2 !== 0 && j !== 1;
+  };
+
+  isNodeCell = (i, j) => {
+    return (
+      i % 2 !== 0 && j !== 0 && j !== 1 && j % 2 === 0 && j !== gridWidth - 1
+    );
+  };
+
+  detectPointerCell = (i, j) => {
+    const { p1, p2, p1Prev } = this.state;
+    const [p1x, p1y] = p1;
+    const [p2x, p2y] = p2;
+    const [p1Px, p1Py] = p1Prev;
+
+    if (i === p1x && j === p1y) {
+      return "p1";
+    } else if (i === p2x && j === p2y) {
+      return "p2";
+    } else if (i === p1Px && j === p1Py) {
+      return "p1Prev";
+    }
+    return "";
+  };
+
+  getCellValue = (i, j, curr) => {
+    if (this.isFirstNullCell(i, j)) {
+      return "null";
+    }
+
+    if (i % 2 !== 0 && this.areLastNullCells(j)) {
+      return "null";
+    }
+
+    const pointerCell = this.detectPointerCell(i, j);
+    if (pointerCell) {
+      return pointerCell;
+    }
+
+    if (this.isArrowCell(i, j)) {
+      return <Arrow dims={nodeDims} direction="horizontal" />;
+    }
+    if (this.isNodeCell(i, j)) {
+      return curr.value;
+    }
+  };
+
+  addTriangle = (i, j) => {
+    let direction = "";
+    if (this.detectPointerCell(i, j)) {
+      direction += i === 0 ? "down" : "up";
+    }
+    return direction ? (
+      <div className={`triangle triangle-${direction}`}></div>
+    ) : (
+      ""
+    );
+  };
+
+  renderLists = (listOne, listTwo) => {
+    const grid = new Array(gridHeight).fill(0).map((row, i) => {
+      let curr;
+      if (i === 1) {
+        curr = listOne;
+      } else if (i === 3) {
+        curr = listTwo;
+      }
+
+      return (
+        <div
+          key={`LL-row-${i}`}
+          className={`row d-flex justify-content-center listRow`}
+        >
+          {new Array(gridWidth).fill(0).map((v, j) => {
+            let prev = curr;
+            if (this.isNodeCell(i, j)) {
+              curr = curr.next;
+            }
+            return (
+              <div
+                key={`LLnode-${i}-${j}`}
+                className={this.getSquareStyle(i, j)}
+              >
+                {this.getCellValue(i, j, prev)}
+                {this.addTriangle(i, j)}
+              </div>
+            );
+          })}
+        </div>
+      );
+    });
+    return grid;
   };
 
   renderButtonRow = () => {
@@ -120,94 +237,6 @@ class Merge extends React.Component {
         <div className="col"></div>
       </div>
     );
-  };
-
-  getSquareStyle = (i, j) => {
-    let style = "gridSquare-node ";
-
-    //non-list rows
-    if (i % 2 === 0) {
-      return style;
-    }
-    //empty space in front of list
-    if (j === 0 || j === 1 || j === gridWidth - 1) {
-      return style;
-    }
-    //arrow squares
-    if (j % 2 !== 0) {
-      return style;
-    }
-    return (style += "border-black");
-  };
-
-  isFirstNullCell = (i, j) => {
-    return i === 1 && j === 0;
-  };
-
-  areLastNullCells = (i, j) => {
-    return i === 1 && j === gridWidth - 1;
-  };
-
-  isArrowCell = (i, j) => {
-    return i % 2 !== 0 && j % 2 !== 0 && j !== 1;
-  };
-
-  isNodeCell = (i, j) => {
-    return (
-      i % 2 !== 0 && j !== 0 && j !== 1 && j % 2 === 0 && j !== gridWidth - 1
-    );
-  };
-
-  getCellValue = (i, j, curr) => {
-    if (this.isFirstNullCell(i, j)) {
-      return "null";
-    }
-
-    if (this.areLastNullCells(i, j)) {
-      return "null";
-    }
-    if (this.isArrowCell(i, j)) {
-      return <Arrow dims={nodeDims} direction="horizontal" />;
-    }
-    if (this.isNodeCell(i, j)) {
-      console.log("curr: ", curr);
-      return curr.value;
-    }
-  };
-
-  renderLists = (listOne, listTwo) => {
-    console.log(listOne, listTwo);
-    const grid = new Array(gridHeight).fill(0).map((row, i) => {
-      let curr;
-      if (i === 1) {
-        curr = listOne;
-      } else if (i === 3) {
-        curr = listTwo;
-      }
-
-      return (
-        <div
-          key={`LL-row-${i}`}
-          className={`row d-flex justify-content-center listRow`}
-        >
-          {new Array(gridWidth).fill(0).map((v, j) => {
-            let prev = curr;
-            if (this.isNodeCell(i, j)) {
-              curr = curr.next;
-            }
-            return (
-              <div
-                key={`LLnode-${i}-${j}`}
-                className={this.getSquareStyle(i, j)}
-              >
-                {this.getCellValue(i, j, prev)}
-              </div>
-            );
-          })}
-        </div>
-      );
-    });
-    return grid;
   };
 
   render() {
