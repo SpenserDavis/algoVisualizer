@@ -5,9 +5,10 @@ import Arrow from "./Arrow";
 import { sleep } from "../../../services/utilities";
 
 class LinkedList {
-  constructor(value) {
+  constructor(value, list) {
     this.value = value;
     this.next = null;
+    this.list = list;
   }
 }
 const listSize = 5;
@@ -22,6 +23,7 @@ class Merge extends React.Component {
     this.state = {
       listOne: {},
       listTwo: {},
+      arrows: [],
       p1: [-1, -1],
       p1Next: [-1, -1],
       p2: [-1, -1],
@@ -42,12 +44,27 @@ class Merge extends React.Component {
   }
 
   initializeLists = () => {
-    const listOne = this.generateNewList();
-    const listTwo = this.generateNewList();
-    this.setState({ listOne, listTwo });
+    const listOne = this.generateNewList(1);
+    const listTwo = this.generateNewList(2);
+
+    const arrows = new Array(gridHeight).fill(0);
+
+    for (let i = 0; i < arrows.length; i++) {
+      const row = [];
+      for (let j = 0; j < gridWidth; j++) {
+        if (this.isInitialArrowCell(i, j)) {
+          row.push("horizontal");
+        } else {
+          row.push("");
+        }
+      }
+      arrows[i] = row;
+    }
+
+    this.setState({ listOne, listTwo, arrows });
   };
 
-  generateNewList = () => {
+  generateNewList = (listNum) => {
     const arr = new Array(listSize);
     for (let i = 0; i < listSize; i++) {
       const randInt = Math.floor(Math.random() * 10);
@@ -55,19 +72,26 @@ class Merge extends React.Component {
     }
     arr.sort();
     let i = 0;
-    const listHead = this.generateNewNode(arr[i++]);
+    const listHead = new LinkedList(arr[i++], listNum);
     let curr = listHead;
 
     while (i < listSize) {
-      curr.next = this.generateNewNode(arr[i++]);
+      curr.next = new LinkedList(arr[i++], listNum);
       curr = curr.next;
     }
     return listHead;
   };
 
-  generateNewNode = (v) => {
-    const node = new LinkedList(v);
-    return node;
+  copyList = (list, listNum) => {
+    let newHead = new LinkedList(0, listNum);
+    let curr = newHead;
+    while (list) {
+      curr.next = new LinkedList(list.value, listNum);
+      list = list.next;
+      curr = curr.next;
+    }
+
+    return newHead.next;
   };
 
   performMerge = async () => {
@@ -93,64 +117,53 @@ class Merge extends React.Component {
       listTwo,
     } = this.state;
 
-    let l1 = listOne;
-    let l2 = listTwo;
+    let l1 = this.copyList(listOne, 1);
+    let l2 = this.copyList(listTwo, 2);
+
     let l1Prev = null;
     let newP2;
     while (!this.areLastNullCells(p1[1]) && !this.areLastNullCells(p2[1])) {
-      let currP1Row,
-        currP1Col,
-        currP2Row,
-        currP2Col,
-        currP1PrevRow,
-        currP1PrevCol;
-
       const { p1PrevNext, p1Next, p2Next } = this.state;
 
-      if (p1) {
-        [currP1Row, currP1Col] = p1;
-      }
-      if (p2) {
-        [currP2Row, currP2Col] = p2;
-      }
-      if (p1Prev) {
-        [currP1PrevRow, currP1PrevCol] = p1Prev;
-      }
+      const [currP1Row, currP1Col] = p1;
 
-      debugger;
+      const [currP2Row, currP2Col] = p2;
+
+      const [currP1PrevRow, currP1PrevCol] = p1Prev;
+
       if (l1.value < l2.value) {
         l1Prev = l1;
-        let newP1 = p1;
-        this.setState({ p1Prev: newP1 });
+
+        this.setState({ p1Prev: p1 });
         await sleep(this.props.speed + 1000);
         l1 = l1.next;
-
+        //not same row potentially
         this.setState({ p1: [currP1Row, currP1Col + 2] });
         await sleep(this.props.speed + 1000);
       } else {
         if (l1Prev) {
           l1Prev.next = l2;
-          newP2 = p2;
-          this.setState({ p1PrevNext: newP2 });
+
+          this.setState({ arrows });
           await sleep(this.props.speed + 1000);
         }
         l1Prev = l2;
-        this.setState({ p1Prev: newP2 });
+        this.setState({ p1Prev: p2 });
         await sleep(this.props.speed + 1000);
         l2 = l2.next;
-        let newP2Next = p2Next;
-        this.setState({ p2: newP2Next });
+
+        this.setState({ p2: [currP2Row, currP2Col + 2] });
         await sleep(this.props.speed + 1000);
         l1Prev.next = l1;
-        let newP1 = p1;
-        this.setState({ p1PrevNext: newP1 });
+
+        this.setState({ arrows });
         await sleep(this.props.speed + 1000);
       }
     }
 
     if (!l1) {
       l1Prev.next = l2;
-      this.setState({ p1PrevNext: newP2 });
+      this.setState({ arrows });
       await sleep(this.props.speed + 1000);
     }
     this.setState({ simulationIsRunning: false, simulationIsComplete: true });
@@ -160,8 +173,9 @@ class Merge extends React.Component {
     let style = "gridSquare-node ";
 
     if (this.isNodeCell(i, j)) {
-      style += "border-black";
+      style += "border-black ";
     }
+
     return style;
   };
 
@@ -173,7 +187,7 @@ class Merge extends React.Component {
     return j === gridWidth - 1;
   };
 
-  isArrowCell = (i, j) => {
+  isInitialArrowCell = (i, j) => {
     return i % 2 !== 0 && j % 2 !== 0 && j !== 1;
   };
 
@@ -187,15 +201,22 @@ class Merge extends React.Component {
     const { p1, p2, p1Prev } = this.state;
     const [p1x, p1y] = p1;
     const [p2x, p2y] = p2;
-    const [p1Px, p1Py] = p1Prev;
 
-    if (i === p1x && j === p1y) {
+    const [p1Px, p1Py] = p1Prev;
+    if (i === p1Px && j === p1Py) {
+      if (p1Px === p1x && p1Py === p1y) {
+        return "p1Prev, p1";
+      } else if (p1Px === p2x && p1Py === p2y) {
+        return "p1Prev, p2";
+      } else {
+        return "p1Prev";
+      }
+    } else if (i === p1x && j === p1y) {
       return "p1";
     } else if (i === p2x && j === p2y) {
       return "p2";
-    } else if (i === p1Px && j === p1Py) {
-      return "p1Prev";
     }
+
     return "";
   };
 
@@ -213,8 +234,9 @@ class Merge extends React.Component {
       return pointerCell;
     }
 
-    if (this.isArrowCell(i, j)) {
-      return <Arrow dims={nodeDims} direction="horizontal" />;
+    const arrowDirection = this.state.arrows[i][j];
+    if (arrowDirection) {
+      return <Arrow dims={nodeDims} direction={arrowDirection} />;
     }
     if (this.isNodeCell(i, j)) {
       return curr.value;

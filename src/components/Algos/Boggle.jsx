@@ -137,7 +137,6 @@ class Boggle extends React.Component {
   };
 
   tryPlaceWord = (i, j, board, currWord, currCharIdx) => {
-    // debugger;
     const location = board[i][j];
     if (location.visiting) {
       return false;
