@@ -1,13 +1,19 @@
 import React from "react";
 import "./merge.css";
 
-const Arrow = ({ width, direction }) => {
+const Arrow = ({ dims, direction }) => {
   const computeSvgDims = () => {
-    return { height: "50", width: `${width - 50}` };
+    return { height: "66", width: `${dims}` };
   };
 
   const computeArrowDims = () => {
-    return { x1: "0", y1: "25", x2: `${width - 66}`, y2: "25" };
+    return {
+      x1: "5",
+      y1: `${dims / 2}`,
+      x2: `${dims / 1.5}`,
+      y2: `${dims / 2}`,
+    };
+    // return { x1: "0", y1: "50", x2: `${width - 50}`, y2: "110" };
   };
 
   return (

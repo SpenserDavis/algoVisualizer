@@ -63,7 +63,7 @@ class Apples extends React.Component {
       let modifiableMatrix = new Array(appleMatrix.length)
         .fill(0)
         .map((_, i) => appleMatrix[i].slice());
-      console.log("a");
+
       const dayCounter = await this.getNumDays(modifiableMatrix);
       this._isMounted &&
         this.setState({
@@ -76,7 +76,7 @@ class Apples extends React.Component {
 
   getNumDays = async (matrix) => {
     let days = 0;
-    console.log("b");
+
     const toTraverse = [[-1, -1]];
     let freshCount = [0];
     for (let i = 0; i < matrix.length; i++) {
@@ -191,7 +191,7 @@ class Apples extends React.Component {
     return (
       <div className="row grid">
         <div className="col">
-          {appleMatrix.length &&
+          {appleMatrix.length > 0 &&
             appleMatrix.map((r, i) => (
               <div
                 className="row d-flex justify-content-center"

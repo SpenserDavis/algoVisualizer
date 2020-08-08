@@ -286,7 +286,7 @@ class Rivers extends React.Component {
     return (
       <div className="row grid">
         <div className="col">
-          {riverMatrix.length &&
+          {riverMatrix.length > 0 &&
             riverMatrix.map((r, i) => (
               <div
                 className="row d-flex justify-content-center"

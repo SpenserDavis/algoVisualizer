@@ -362,7 +362,7 @@ class Boggle extends React.Component {
     return (
       <div className="row grid">
         <div className="col">
-          {board.length &&
+          {board.length > 0 &&
             board.map((r, i) => (
               <div
                 className="row d-flex justify-content-center"
