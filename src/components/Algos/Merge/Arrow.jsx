@@ -1,6 +1,8 @@
 import React from "react";
 import "./merge.css";
 
+//decided against using this for Merge; saving component for future use
+
 const Arrow = ({ dims, direction }) => {
   const computeSvgDims = () => {
     return { height: `${dims}`, width: `${dims}` };
