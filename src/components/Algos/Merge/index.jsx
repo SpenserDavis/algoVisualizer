@@ -100,16 +100,100 @@ class Merge extends React.Component {
     return listHead;
   };
 
-  copyList = (list, listNum) => {
-    let newHead = new LinkedList(0, listNum);
-    let curr = newHead;
-    while (list) {
-      curr.next = new LinkedList(list.value, listNum);
-      list = list.next;
-      curr = curr.next;
+  // copyList = (list, listNum) => {
+  //   let newHead = new LinkedList(0, listNum);
+  //   let curr = newHead;
+  //   while (list) {
+  //     curr.next = new LinkedList(list.value, listNum);
+  //     list = list.next;
+  //     curr = curr.next;
+  //   }
+
+  //   return newHead.next;
+  // };
+
+  performMerge = async () => {
+    this.setState({
+      simulationIsRunning: true,
+      p1: [0, 2],
+      p2: [4, 2],
+      p1Prev: [0, 0],
+    });
+    await sleep(this.speed);
+
+    const { p1, p2, p1Prev, listOne, listTwo } = this.state;
+
+    let l1 = listOne.slice();
+    let l2 = listTwo.slice();
+
+    let [currP1Row, currP1Col] = p1;
+
+    let [currP2Row, currP2Col] = p2;
+
+    let [currP1PrevRow, currP1PrevCol] = p1Prev;
+
+    let idx1 = 0;
+    let idx2 = 0;
+
+    console.log(idx1, idx2, l1.length);
+    while (idx1 < l1.length && idx2 < l1.length) {
+      debugger;
+      if (l1[idx1].value < l2[idx2].value) {
+        this.setState({ p1Prev: p1 });
+        currP1PrevCol = currP1Col;
+        currP1PrevRow = currP1Row;
+        await sleep(this.speed);
+
+        this.setState({ p1: [0, currP1Col + 2] });
+        idx1++;
+        currP1Col += 2;
+        await sleep(this.speed);
+      } else {
+        if (currP1PrevCol > 0) {
+          if (currP1PrevRow === 0) {
+            l1[currP1PrevCol / 2 - 1].next = [3, currP2Col];
+          } else {
+            l2[currP1PrevCol / 2 - 1].next = [3, currP2Col];
+          }
+
+          this.setState({ listOne: l1, listTwo: l2 });
+          await sleep(this.speed);
+        }
+
+        this.setState({ p1Prev: [currP2Row, currP2Col] });
+        currP1PrevCol = currP2Col;
+        currP1PrevRow = currP2Row;
+        await sleep(this.speed);
+
+        idx2++;
+        this.setState({ p2: [4, currP2Col + 2] });
+        currP2Col += 2;
+        await sleep(this.speed);
+        debugger;
+        if (currP1PrevRow === 0) {
+          l1[currP1PrevCol / 2 - 1].next = [1, currP1Col];
+        } else {
+          l2[currP1PrevCol / 2 - 1].next = [1, currP1Col];
+        }
+
+        this.setState({ listOne: l1, listTwo: l2 });
+        await sleep(this.speed);
+        debugger;
+      }
     }
 
-    return newHead.next;
+    if (idx1 >= l1.length) {
+      if (currP1PrevRow === 0) {
+        l1[currP1PrevCol / 2 - 1].next = [3, currP2Col];
+      } else {
+        l2[currP1PrevCol / 2 - 1].next = [3, currP2Col];
+      }
+
+      this.setState({ listOne: l1, listTwo: l2 });
+      await sleep(this.speed);
+    }
+
+    this.setState({ simulationIsRunning: false, simulationIsComplete: true });
   };
 
   // performMerge = async () => {
@@ -304,6 +388,29 @@ class Merge extends React.Component {
     );
   };
 
+  getAnchorRelations = (curr, idx, i) => {
+    let targetId = `node-[${[curr[idx].next]}]`;
+    let targetAnchor, sourceAnchor;
+    let targetRow = curr[idx].next[0];
+
+    if (targetRow === i) {
+      targetAnchor = "left";
+      sourceAnchor = "right";
+    } else if (targetRow > i) {
+      targetAnchor = "top";
+      sourceAnchor = "bottom";
+    } else {
+      targetAnchor = "bottom";
+      sourceAnchor = "top";
+    }
+
+    return {
+      targetId,
+      targetAnchor,
+      sourceAnchor,
+    };
+  };
+
   renderLists = (listOne, listTwo) => {
     const grid = new Array(gridHeight).fill(0).map((row, i) => {
       let curr;
@@ -322,20 +429,14 @@ class Merge extends React.Component {
           {new Array(gridWidth).fill(0).map((v, j) => {
             if (this.isNodeCell(i, j)) {
               idx++;
-              console.log(`curr: node-[${[i, j]}]`);
-              console.log(`next: node-[${[curr[idx].next]}]`);
+              // console.log(`curr: node-[${[i, j]}]`);
+              // console.log(`next: node-[${[curr[idx].next]}]`);
 
               return (
                 <ArcherElement
                   key={`LLnode-${i}-${j}`}
                   id={`node-[${[i, j]}]`}
-                  relations={[
-                    {
-                      targetId: `node-[${[curr[idx].next]}]`,
-                      targetAnchor: "left",
-                      sourceAnchor: "right",
-                    },
-                  ]}
+                  relations={[this.getAnchorRelations(curr, idx, i)]}
                 >
                   <div className={this.getSquareStyle(i, j)}>
                     {curr[idx].value}
