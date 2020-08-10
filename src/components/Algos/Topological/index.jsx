@@ -1,7 +1,8 @@
 import React from "react";
-import description from "../../algoProblemDescriptions/topological";
-import AlgoHeader from "../../components/AlgoHeader";
-import { sleep } from "../../services/utilities";
+import description from "../../../algoProblemDescriptions/topological";
+import AlgoHeader from "../../../components/AlgoHeader";
+import { sleep } from "../../../services/utilities";
+import TopoGraph from "./TopoGraph";
 
 const numJobsLowerBound = 3;
 const numJobsUpperBound = 9;
@@ -78,8 +79,6 @@ class Topo extends React.Component {
     );
   };
 
-  renderGraph = () => {};
-
   renderButtonRow = () => {
     const {
       simulationIsRunning,
@@ -117,7 +116,11 @@ class Topo extends React.Component {
         <AlgoHeader title="Topological Sort" description={description} />
         {this.renderButtonRow()}
         {jobs.length > 0 && this.renderJobStringRow(jobs, deps)}
-        {this.renderGraph()}
+        <div className="row grid">
+          <div className="col">
+            <TopoGraph />
+          </div>
+        </div>
       </>
     );
   }
