@@ -80,6 +80,7 @@ class Boggle extends React.Component {
   constructor(props) {
     super(props);
     this._isMounted = true;
+    this.speed = this.props.speed / 2;
     this.state = {
       ...initialStatePresets,
     };
@@ -94,7 +95,6 @@ class Boggle extends React.Component {
   }
 
   randomizeBoardAndWords = () => {
-    this.setState({ simulationIsComplete: false });
     const targetWords = [];
     for (let letterCountKey in wordList) {
       const randIdx = Math.floor(
@@ -133,7 +133,7 @@ class Boggle extends React.Component {
 
     this.populateEmptyCells(board);
 
-    this.setState({ targetWords, board });
+    this.setState({ targetWords, board, simulationIsComplete: false });
   };
 
   tryPlaceWord = (i, j, board, currWord, currCharIdx) => {
@@ -212,7 +212,7 @@ class Boggle extends React.Component {
 
   exploreNode = async (board, i, j, node, foundWords) => {
     this._isMounted && this.setState({ currNode: [i, j] });
-    await sleep(this.props.speed);
+    await sleep(this.speed);
     let wordIsFound = false;
     const location = board[i][j];
     if (location.visiting) {

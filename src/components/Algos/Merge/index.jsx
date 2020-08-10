@@ -16,19 +16,24 @@ const gridWidth = listSize * 2 + 3;
 const gridHeight = 5;
 const nodeDims = 66;
 
+const initialStatePresets = {
+  p1: [-1, -1],
+  p2: [-1, -1],
+  p1Prev: [-1, -1],
+  simulationIsComplete: false,
+};
+
 class Merge extends React.Component {
   constructor(props) {
     super(props);
     this._isMounted = true;
+    this.speed = this.props.speed + 1000;
     this.state = {
       listOne: {},
       listTwo: {},
       arrows: [],
-      p1: [-1, -1],
-      p2: [-1, -1],
-      p1Prev: [-1, -1],
       simulationIsRunning: false,
-      simulationIsComplete: false,
+      ...initialStatePresets,
     };
   }
 
@@ -41,8 +46,8 @@ class Merge extends React.Component {
   }
 
   initializeLists = () => {
-    const listOne = this.generateNewList(1);
-    const listTwo = this.generateNewList(2);
+    const listOne = this.generateNewList1(1);
+    const listTwo = this.generateNewList2(2);
 
     const arrows = new Array(gridHeight).fill(0);
 
@@ -58,7 +63,13 @@ class Merge extends React.Component {
       arrows[i] = row;
     }
 
-    this.setState({ listOne, listTwo, arrows });
+    this.setState({
+      listOne,
+      listTwo,
+      arrows,
+      simulationIsComplete: false,
+      ...initialStatePresets,
+    });
   };
 
   generateNewList = (listNum) => {
@@ -68,6 +79,42 @@ class Merge extends React.Component {
       arr[i] = randInt;
     }
     arr.sort();
+    let i = 0;
+    const listHead = new LinkedList(arr[i++], listNum);
+    let curr = listHead;
+
+    while (i < listSize) {
+      curr.next = new LinkedList(arr[i++], listNum);
+      curr = curr.next;
+    }
+    return listHead;
+  };
+  generateNewList1 = (listNum) => {
+    // const arr = new Array(listSize);
+    // for (let i = 0; i < listSize; i++) {
+    //   const randInt = Math.floor(Math.random() * 10);
+    //   arr[i] = randInt;
+    // }
+    // arr.sort();
+    const arr = [0, 6, 7, 9, 9];
+    let i = 0;
+    const listHead = new LinkedList(arr[i++], listNum);
+    let curr = listHead;
+
+    while (i < listSize) {
+      curr.next = new LinkedList(arr[i++], listNum);
+      curr = curr.next;
+    }
+    return listHead;
+  };
+  generateNewList2 = (listNum) => {
+    // const arr = new Array(listSize);
+    // for (let i = 0; i < listSize; i++) {
+    //   const randInt = Math.floor(Math.random() * 10);
+    //   arr[i] = randInt;
+    // }
+    // arr.sort();
+    const arr = [0, 1, 5, 6, 6];
     let i = 0;
     const listHead = new LinkedList(arr[i++], listNum);
     let curr = listHead;
@@ -98,7 +145,7 @@ class Merge extends React.Component {
       p2: [4, 2],
       p1Prev: [0, 0],
     });
-    await sleep(this.props.speed + 1000);
+    await sleep(this.speed);
 
     const { p1, p2, p1Prev, listOne, listTwo } = this.state;
 
@@ -114,7 +161,7 @@ class Merge extends React.Component {
 
     let [currP1PrevRow, currP1PrevCol] = p1Prev;
     let direction;
-    while (!this.areLastNullCells(p1[1]) && !this.areLastNullCells(p2[1])) {
+    while (l1 && l2) {
       debugger;
       if (l1.value < l2.value) {
         l1Prev = l1;
@@ -122,12 +169,12 @@ class Merge extends React.Component {
         this.setState({ p1Prev: p1 });
         currP1PrevCol = currP1Col;
         currP1PrevRow = currP1Row;
-        await sleep(this.props.speed + 1000);
+        await sleep(this.speed);
         l1 = l1.next;
 
         this.setState({ p1: [0, currP1Col + 2] });
         currP1Col += 2;
-        await sleep(this.props.speed + 1000);
+        await sleep(this.speed);
       } else {
         if (l1Prev) {
           l1Prev.next = l2;
@@ -142,21 +189,27 @@ class Merge extends React.Component {
           }
           if (direction !== "horizontal") {
             arrows[currP1PrevRow === 0 ? 1 : 3][currP1PrevCol + 1] = "";
+
             arrows[2][currP1PrevCol + 1] = direction;
+            arrows[2][
+              direction === "vertical-down" ? currP1PrevCol : currP1PrevCol + 1
+            ] = direction;
+
+            this.setState({ arrows });
           }
-          this.setState({ arrows });
-          await sleep(this.props.speed + 1000);
+
+          await sleep(this.speed);
         }
         l1Prev = l2;
-        this.setState({ p1Prev: p2 });
+        this.setState({ p1Prev: [currP2Row, currP2Col] });
         currP1PrevCol = currP2Col;
         currP1PrevRow = currP2Row;
-        await sleep(this.props.speed + 1000);
+        await sleep(this.speed);
         l2 = l2.next;
 
         this.setState({ p2: [4, currP2Col + 2] });
         currP2Col += 2;
-        await sleep(this.props.speed + 1000);
+        await sleep(this.speed);
         l1Prev.next = l1;
         if (currP1PrevRow === currP1Row) {
           direction = "horizontal";
@@ -167,14 +220,16 @@ class Merge extends React.Component {
             direction = "diagonal-up";
           }
         }
+
         if (direction !== "horizontal") {
           arrows[currP1PrevRow === 0 ? 1 : 3][currP1PrevCol + 1] = "";
           arrows[2][
             direction === "vertical-up" ? currP1PrevCol : currP1PrevCol + 1
           ] = direction;
         }
+
         this.setState({ arrows });
-        await sleep(this.props.speed + 1000);
+        await sleep(this.speed);
       }
     }
 
@@ -194,9 +249,9 @@ class Merge extends React.Component {
         arrows[2][
           direction === "vertical-down" ? currP1PrevCol : currP1PrevCol + 1
         ] = direction;
+        this.setState({ arrows });
       }
-      this.setState({ arrows });
-      await sleep(this.props.speed + 1000);
+      await sleep(this.speed);
     }
     this.setState({ simulationIsRunning: false, simulationIsComplete: true });
   };

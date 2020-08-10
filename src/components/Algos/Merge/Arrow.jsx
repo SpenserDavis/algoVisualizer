@@ -3,18 +3,12 @@ import "./merge.css";
 
 const Arrow = ({ dims, direction }) => {
   const computeSvgDims = () => {
-    return { height: "66", width: `${dims}` };
+    return { height: `${dims}`, width: `${dims}` };
   };
 
   const computeArrowDims = () => {
     let x1, y1, x2, y2;
     switch (direction) {
-      case "horizontal":
-        x1 = "5";
-        y1 = `${dims / 2}`;
-        x2 = `${dims / 1.5}`;
-        y2 = `${dims / 2}`;
-        break;
       case "vertical-down":
         x1 = `${dims / 2}`;
         y1 = `5`;
@@ -39,6 +33,13 @@ const Arrow = ({ dims, direction }) => {
         x2 = `${dims / 1.4}`;
         y2 = `${dims / 1.4}`;
         break;
+      //horizontal
+      default:
+        x1 = "5";
+        y1 = `${dims / 2}`;
+        x2 = `${dims / 1.5}`;
+        y2 = `${dims / 2}`;
+        break;
     }
 
     return { x1, y1, x2, y2 };
@@ -60,6 +61,13 @@ const Arrow = ({ dims, direction }) => {
       </defs>
 
       <line {...computeArrowDims()} className="arrow" />
+      {/* <line
+        x1={`${dims / 2}`}
+        y1={`${dims - 5}`}
+        x2={`${dims / 2}`}
+        y2={`20`}
+        className="arrow"
+      /> */}
     </svg>
   );
 };
