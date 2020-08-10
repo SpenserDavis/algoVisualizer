@@ -3,6 +3,7 @@ import description from "../../../algoProblemDescriptions/merge";
 import AlgoHeader from "../../AlgoHeader";
 import Arrow from "./Arrow";
 import { sleep } from "../../../services/utilities";
+import { ArcherContainer, ArcherElement } from "react-archer";
 
 class LinkedList {
   constructor(value, list) {
@@ -29,9 +30,21 @@ class Merge extends React.Component {
     this._isMounted = true;
     this.speed = this.props.speed + 1000;
     this.state = {
-      listOne: {},
-      listTwo: {},
-      arrows: [],
+      listOne: [
+        { value: 0, next: [1, 4] },
+        { value: 6, next: [1, 6] },
+        { value: 7, next: [1, 8] },
+        { value: 9, next: [1, 10] },
+        { value: 9, next: [1, 12] },
+      ],
+      listTwo: [
+        { value: 0, next: [3, 4] },
+        { value: 1, next: [3, 6] },
+        { value: 5, next: [3, 8] },
+        { value: 6, next: [3, 10] },
+        { value: 6, next: [3, 12] },
+      ],
+
       simulationIsRunning: false,
       ...initialStatePresets,
     };
@@ -46,30 +59,27 @@ class Merge extends React.Component {
   }
 
   initializeLists = () => {
-    const listOne = this.generateNewList1(1);
-    const listTwo = this.generateNewList2(2);
-
-    const arrows = new Array(gridHeight).fill(0);
-
-    for (let i = 0; i < arrows.length; i++) {
-      const row = [];
-      for (let j = 0; j < gridWidth; j++) {
-        if (this.isInitialArrowCell(i, j)) {
-          row.push("horizontal");
-        } else {
-          row.push("");
-        }
-      }
-      arrows[i] = row;
-    }
-
-    this.setState({
-      listOne,
-      listTwo,
-      arrows,
-      simulationIsComplete: false,
-      ...initialStatePresets,
-    });
+    // const listOne = this.generateNewList(1);
+    // const listTwo = this.generateNewList(2);
+    // const arrows = new Array(gridHeight).fill(0);
+    // for (let i = 0; i < arrows.length; i++) {
+    //   const row = [];
+    //   for (let j = 0; j < gridWidth; j++) {
+    //     if (this.isInitialArrowCell(i, j)) {
+    //       row.push("horizontal");
+    //     } else {
+    //       row.push("");
+    //     }
+    //   }
+    //   arrows[i] = row;
+    // }
+    // this.setState({
+    //   listOne,
+    //   listTwo,
+    //   arrows,
+    //   simulationIsComplete: false,
+    //   ...initialStatePresets,
+    // });
   };
 
   generateNewList = (listNum) => {
@@ -79,42 +89,6 @@ class Merge extends React.Component {
       arr[i] = randInt;
     }
     arr.sort();
-    let i = 0;
-    const listHead = new LinkedList(arr[i++], listNum);
-    let curr = listHead;
-
-    while (i < listSize) {
-      curr.next = new LinkedList(arr[i++], listNum);
-      curr = curr.next;
-    }
-    return listHead;
-  };
-  generateNewList1 = (listNum) => {
-    // const arr = new Array(listSize);
-    // for (let i = 0; i < listSize; i++) {
-    //   const randInt = Math.floor(Math.random() * 10);
-    //   arr[i] = randInt;
-    // }
-    // arr.sort();
-    const arr = [0, 6, 7, 9, 9];
-    let i = 0;
-    const listHead = new LinkedList(arr[i++], listNum);
-    let curr = listHead;
-
-    while (i < listSize) {
-      curr.next = new LinkedList(arr[i++], listNum);
-      curr = curr.next;
-    }
-    return listHead;
-  };
-  generateNewList2 = (listNum) => {
-    // const arr = new Array(listSize);
-    // for (let i = 0; i < listSize; i++) {
-    //   const randInt = Math.floor(Math.random() * 10);
-    //   arr[i] = randInt;
-    // }
-    // arr.sort();
-    const arr = [0, 1, 5, 6, 6];
     let i = 0;
     const listHead = new LinkedList(arr[i++], listNum);
     let curr = listHead;
@@ -138,123 +112,123 @@ class Merge extends React.Component {
     return newHead.next;
   };
 
-  performMerge = async () => {
-    this.setState({
-      simulationIsRunning: true,
-      p1: [0, 2],
-      p2: [4, 2],
-      p1Prev: [0, 0],
-    });
-    await sleep(this.speed);
+  // performMerge = async () => {
+  //   this.setState({
+  //     simulationIsRunning: true,
+  //     p1: [0, 2],
+  //     p2: [4, 2],
+  //     p1Prev: [0, 0],
+  //   });
+  //   await sleep(this.speed);
 
-    const { p1, p2, p1Prev, listOne, listTwo } = this.state;
+  //   const { p1, p2, p1Prev, listOne, listTwo } = this.state;
 
-    let l1 = this.copyList(listOne, 1);
-    let l2 = this.copyList(listTwo, 2);
+  //   let l1 = this.copyList(listOne, 1);
+  //   let l2 = this.copyList(listTwo, 2);
 
-    let l1Prev = null;
+  //   let l1Prev = null;
 
-    const arrows = this.state.arrows.slice();
-    let [currP1Row, currP1Col] = p1;
+  //   const arrows = this.state.arrows.slice();
+  //   let [currP1Row, currP1Col] = p1;
 
-    let [currP2Row, currP2Col] = p2;
+  //   let [currP2Row, currP2Col] = p2;
 
-    let [currP1PrevRow, currP1PrevCol] = p1Prev;
-    let direction;
-    while (l1 && l2) {
-      debugger;
-      if (l1.value < l2.value) {
-        l1Prev = l1;
+  //   let [currP1PrevRow, currP1PrevCol] = p1Prev;
+  //   let direction;
+  //   while (l1 && l2) {
+  //     debugger;
+  //     if (l1.value < l2.value) {
+  //       l1Prev = l1;
 
-        this.setState({ p1Prev: p1 });
-        currP1PrevCol = currP1Col;
-        currP1PrevRow = currP1Row;
-        await sleep(this.speed);
-        l1 = l1.next;
+  //       this.setState({ p1Prev: p1 });
+  //       currP1PrevCol = currP1Col;
+  //       currP1PrevRow = currP1Row;
+  //       await sleep(this.speed);
+  //       l1 = l1.next;
 
-        this.setState({ p1: [0, currP1Col + 2] });
-        currP1Col += 2;
-        await sleep(this.speed);
-      } else {
-        if (l1Prev) {
-          l1Prev.next = l2;
-          if (currP1PrevRow === currP2Row) {
-            direction = "horizontal";
-          } else {
-            if (currP1PrevCol === currP2Col) {
-              direction = "vertical-down";
-            } else {
-              direction = "diagonal-down";
-            }
-          }
-          if (direction !== "horizontal") {
-            arrows[currP1PrevRow === 0 ? 1 : 3][currP1PrevCol + 1] = "";
+  //       this.setState({ p1: [0, currP1Col + 2] });
+  //       currP1Col += 2;
+  //       await sleep(this.speed);
+  //     } else {
+  //       if (l1Prev) {
+  //         l1Prev.next = l2;
+  //         if (currP1PrevRow === currP2Row) {
+  //           direction = "horizontal";
+  //         } else {
+  //           if (currP1PrevCol === currP2Col) {
+  //             direction = "vertical-down";
+  //           } else {
+  //             direction = "diagonal-down";
+  //           }
+  //         }
+  //         if (direction !== "horizontal") {
+  //           arrows[currP1PrevRow === 0 ? 1 : 3][currP1PrevCol + 1] = "";
 
-            arrows[2][currP1PrevCol + 1] = direction;
-            arrows[2][
-              direction === "vertical-down" ? currP1PrevCol : currP1PrevCol + 1
-            ] = direction;
+  //           arrows[2][currP1PrevCol + 1] = direction;
+  //           arrows[2][
+  //             direction === "vertical-down" ? currP1PrevCol : currP1PrevCol + 1
+  //           ] = direction;
 
-            this.setState({ arrows });
-          }
+  //           this.setState({ arrows });
+  //         }
 
-          await sleep(this.speed);
-        }
-        l1Prev = l2;
-        this.setState({ p1Prev: [currP2Row, currP2Col] });
-        currP1PrevCol = currP2Col;
-        currP1PrevRow = currP2Row;
-        await sleep(this.speed);
-        l2 = l2.next;
+  //         await sleep(this.speed);
+  //       }
+  //       l1Prev = l2;
+  //       this.setState({ p1Prev: [currP2Row, currP2Col] });
+  //       currP1PrevCol = currP2Col;
+  //       currP1PrevRow = currP2Row;
+  //       await sleep(this.speed);
+  //       l2 = l2.next;
 
-        this.setState({ p2: [4, currP2Col + 2] });
-        currP2Col += 2;
-        await sleep(this.speed);
-        l1Prev.next = l1;
-        if (currP1PrevRow === currP1Row) {
-          direction = "horizontal";
-        } else {
-          if (currP1PrevCol === currP1Col) {
-            direction = "vertical-up";
-          } else {
-            direction = "diagonal-up";
-          }
-        }
+  //       this.setState({ p2: [4, currP2Col + 2] });
+  //       currP2Col += 2;
+  //       await sleep(this.speed);
+  //       l1Prev.next = l1;
+  //       if (currP1PrevRow === currP1Row) {
+  //         direction = "horizontal";
+  //       } else {
+  //         if (currP1PrevCol === currP1Col) {
+  //           direction = "vertical-up";
+  //         } else {
+  //           direction = "diagonal-up";
+  //         }
+  //       }
 
-        if (direction !== "horizontal") {
-          arrows[currP1PrevRow === 0 ? 1 : 3][currP1PrevCol + 1] = "";
-          arrows[2][
-            direction === "vertical-up" ? currP1PrevCol : currP1PrevCol + 1
-          ] = direction;
-        }
+  //       if (direction !== "horizontal") {
+  //         arrows[currP1PrevRow === 0 ? 1 : 3][currP1PrevCol + 1] = "";
+  //         arrows[2][
+  //           direction === "vertical-up" ? currP1PrevCol : currP1PrevCol + 1
+  //         ] = direction;
+  //       }
 
-        this.setState({ arrows });
-        await sleep(this.speed);
-      }
-    }
+  //       this.setState({ arrows });
+  //       await sleep(this.speed);
+  //     }
+  //   }
 
-    if (!l1) {
-      l1Prev.next = l2;
-      if (currP1PrevRow === currP2Row) {
-        direction = "horizontal";
-      } else {
-        if (currP1PrevCol === currP2Col) {
-          direction = "vertical-down";
-        } else {
-          direction = "diagonal-down";
-        }
-      }
-      if (direction !== "horizontal") {
-        arrows[currP1PrevRow][currP1PrevCol + 1] = "";
-        arrows[2][
-          direction === "vertical-down" ? currP1PrevCol : currP1PrevCol + 1
-        ] = direction;
-        this.setState({ arrows });
-      }
-      await sleep(this.speed);
-    }
-    this.setState({ simulationIsRunning: false, simulationIsComplete: true });
-  };
+  //   if (!l1) {
+  //     l1Prev.next = l2;
+  //     if (currP1PrevRow === currP2Row) {
+  //       direction = "horizontal";
+  //     } else {
+  //       if (currP1PrevCol === currP2Col) {
+  //         direction = "vertical-down";
+  //       } else {
+  //         direction = "diagonal-down";
+  //       }
+  //     }
+  //     if (direction !== "horizontal") {
+  //       arrows[currP1PrevRow][currP1PrevCol + 1] = "";
+  //       arrows[2][
+  //         direction === "vertical-down" ? currP1PrevCol : currP1PrevCol + 1
+  //       ] = direction;
+  //       this.setState({ arrows });
+  //     }
+  //     await sleep(this.speed);
+  //   }
+  //   this.setState({ simulationIsRunning: false, simulationIsComplete: true });
+  // };
 
   getSquareStyle = (i, j) => {
     let style = "gridSquare-node ";
@@ -307,26 +281,14 @@ class Merge extends React.Component {
     return "";
   };
 
-  getCellValue = (i, j, curr) => {
+  getCellValue = (i, j) => {
     if (this.isFirstNullCell(i, j)) {
-      return "null";
-    }
-
-    if (i % 2 !== 0 && this.areLastNullCells(j)) {
       return "null";
     }
 
     const pointerCell = this.detectPointerCell(i, j);
     if (pointerCell) {
       return pointerCell;
-    }
-
-    const arrowDirection = this.state.arrows[i][j];
-    if (arrowDirection) {
-      return <Arrow dims={nodeDims} direction={arrowDirection} />;
-    }
-    if (this.isNodeCell(i, j)) {
-      return curr.value;
     }
   };
 
@@ -351,30 +313,71 @@ class Merge extends React.Component {
         curr = listTwo;
       }
 
+      let idx = -1;
       return (
         <div
           key={`LL-row-${i}`}
           className={`row d-flex justify-content-center listRow`}
         >
           {new Array(gridWidth).fill(0).map((v, j) => {
-            let prev = curr;
             if (this.isNodeCell(i, j)) {
-              curr = curr.next;
+              idx++;
+              console.log(`curr: node-[${[i, j]}]`);
+              console.log(`next: node-[${[curr[idx].next]}]`);
+
+              return (
+                <ArcherElement
+                  key={`LLnode-${i}-${j}`}
+                  id={`node-[${[i, j]}]`}
+                  relations={[
+                    {
+                      targetId: `node-[${[curr[idx].next]}]`,
+                      targetAnchor: "left",
+                      sourceAnchor: "right",
+                    },
+                  ]}
+                >
+                  <div className={this.getSquareStyle(i, j)}>
+                    {curr[idx].value}
+                    {this.addTriangle(i, j)}
+                  </div>
+                </ArcherElement>
+              );
+            } else if (i % 2 !== 0 && this.areLastNullCells(j)) {
+              return (
+                <ArcherElement
+                  key={`LLnode-${i}-${j}`}
+                  id={`node-[${[i, j]}]`}
+                  // relations={[
+                  //   {
+                  //     targetId: `node-[${[curr[idx].next]}]`,
+                  //     targetAnchor: "left",
+                  //     sourceAnchor: "right",
+                  //   },
+                  // ]}
+                >
+                  <div className={this.getSquareStyle(i, j)}>
+                    null
+                    {this.addTriangle(i, j)}
+                  </div>
+                </ArcherElement>
+              );
+            } else {
+              return (
+                <div
+                  key={`LLnode-${i}-${j}`}
+                  className={this.getSquareStyle(i, j)}
+                >
+                  {this.getCellValue(i, j)}
+                  {this.addTriangle(i, j)}
+                </div>
+              );
             }
-            return (
-              <div
-                key={`LLnode-${i}-${j}`}
-                className={this.getSquareStyle(i, j)}
-              >
-                {this.getCellValue(i, j, prev)}
-                {this.addTriangle(i, j)}
-              </div>
-            );
           })}
         </div>
       );
     });
-    return grid;
+    return <ArcherContainer strokeColor="black">{grid}</ArcherContainer>;
   };
 
   renderButtonRow = () => {
