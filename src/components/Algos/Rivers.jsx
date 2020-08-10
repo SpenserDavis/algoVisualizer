@@ -306,13 +306,11 @@ class Rivers extends React.Component {
 
   render() {
     return (
-      <div>
-        <>
-          <AlgoHeader title="River Sizes" description={description} />
-          {this.renderButtonRow()}
-          {this.renderGrid()}
-        </>
-      </div>
+      <>
+        <AlgoHeader title="River Sizes" description={description} />
+        {this.renderButtonRow()}
+        {this.renderGrid()}
+      </>
     );
   }
 }

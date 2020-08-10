@@ -61,12 +61,13 @@ class Merge extends React.Component {
     //   { value: 8, next: [3, 12] },
     // ];
 
-    this.setState({
-      listOne,
-      listTwo,
-      ...initialPointerPresets,
-      simulationIsComplete: false,
-    });
+    this._isMounted &&
+      this.setState({
+        listOne,
+        listTwo,
+        ...initialPointerPresets,
+        simulationIsComplete: false,
+      });
   };
 
   generateNewList = (listRow) => {
@@ -84,12 +85,13 @@ class Merge extends React.Component {
   };
 
   performMerge = async () => {
-    this.setState({
-      simulationIsRunning: true,
-      p1: [0, 2],
-      p2: [4, 2],
-      p1Prev: [0, 0],
-    });
+    this._isMounted &&
+      this.setState({
+        simulationIsRunning: true,
+        p1: [0, 2],
+        p2: [4, 2],
+        p1Prev: [0, 0],
+      });
     await sleep(this.state.speed);
     const { p1, p2, p1Prev, listOne, listTwo, speed } = this.state;
 
@@ -107,12 +109,12 @@ class Merge extends React.Component {
 
     while (idx1 < l1.length && idx2 < l1.length) {
       if (l1[idx1].value < l2[idx2].value) {
-        this.setState({ p1Prev: [0, currP1Col] });
+        this._isMounted && this.setState({ p1Prev: [0, currP1Col] });
         currP1PrevCol = currP1Col;
         currP1PrevRow = currP1Row;
         await sleep(speed);
 
-        this.setState({ p1: [0, currP1Col + 2] });
+        this._isMounted && this.setState({ p1: [0, currP1Col + 2] });
         idx1++;
         currP1Col += 2;
         await sleep(speed);
@@ -124,17 +126,17 @@ class Merge extends React.Component {
             l2[currP1PrevCol / 2 - 1].next = [3, currP2Col];
           }
 
-          this.setState({ listOne: l1, listTwo: l2 });
+          this._isMounted && this.setState({ listOne: l1, listTwo: l2 });
           await sleep(speed);
         }
 
-        this.setState({ p1Prev: [4, currP2Col] });
+        this._isMounted && this.setState({ p1Prev: [4, currP2Col] });
         currP1PrevCol = currP2Col;
         currP1PrevRow = currP2Row;
         await sleep(speed);
 
         idx2++;
-        this.setState({ p2: [4, currP2Col + 2] });
+        this._isMounted && this.setState({ p2: [4, currP2Col + 2] });
         currP2Col += 2;
         await sleep(speed);
 
@@ -144,7 +146,7 @@ class Merge extends React.Component {
           l2[currP1PrevCol / 2 - 1].next = [1, currP1Col];
         }
 
-        this.setState({ listOne: l1, listTwo: l2 });
+        this._isMounted && this.setState({ listOne: l1, listTwo: l2 });
         await sleep(speed);
       }
     }
@@ -156,15 +158,16 @@ class Merge extends React.Component {
         l2[currP1PrevCol / 2 - 1].next = [3, currP2Col];
       }
 
-      this.setState({ listOne: l1, listTwo: l2 });
+      this._isMounted && this.setState({ listOne: l1, listTwo: l2 });
       await sleep(speed);
     }
 
-    this.setState({
-      simulationIsRunning: false,
-      simulationIsComplete: true,
-      ...initialPointerPresets,
-    });
+    this._isMounted &&
+      this.setState({
+        simulationIsRunning: false,
+        simulationIsComplete: true,
+        ...initialPointerPresets,
+      });
   };
 
   getSquareStyle = (i, j) => {

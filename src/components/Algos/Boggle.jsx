@@ -381,17 +381,15 @@ class Boggle extends React.Component {
 
   render() {
     return (
-      <div>
-        <>
-          <AlgoHeader title="Boggle Board" description={description} />
-          {this.renderButtonRow()}
-          <div id="target-words" className="row d-flex align-items-start">
-            <strong className="no-wrap">Target Words: </strong>
-            <span>{this.state.targetWords.join(", ")}</span>
-          </div>
-          {this.renderGrid()}
-        </>
-      </div>
+      <>
+        <AlgoHeader title="Boggle Board" description={description} />
+        {this.renderButtonRow()}
+        <div id="target-words" className="row d-flex align-items-start">
+          <strong className="no-wrap">Target Words: </strong>
+          <span>{this.state.targetWords.join(", ")}</span>
+        </div>
+        {this.renderGrid()}
+      </>
     );
   }
 }
