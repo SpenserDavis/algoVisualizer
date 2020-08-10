@@ -25,16 +25,27 @@ class Topo extends React.Component {
   }
 
   generateUnorderedJobList = () => {
-    const numJobs = Math.floor(
-      Math.random() * (numJobsUpperBound - numJobsLowerBound) +
-        numJobsLowerBound
-    );
-    const jobs = [];
-    const deps = [];
-    for (let i = 0; i < numJobs; i++) {
-      jobs[i] = i + 1;
-      deps.push(this.generateRandomDep(numJobs));
-    }
+    // const numJobs = Math.floor(
+    //   Math.random() * (numJobsUpperBound - numJobsLowerBound) +
+    //     numJobsLowerBound
+    // );
+    // const jobs = [];
+    // const deps = [];
+    // for (let i = 0; i < numJobs; i++) {
+    //   jobs[i] = i + 1;
+    //   deps.push(this.generateRandomDep(numJobs));
+    // }
+
+    // test case
+    const jobs = [1, 2, 3, 4];
+    const deps = [
+      [1, 2],
+      [1, 3],
+      [3, 2],
+      [4, 2],
+      [4, 3],
+    ];
+    //expected output [1, 4, 3, 2] or [4, 1, 3, 2]
 
     this.setState({ jobs, deps });
   };
@@ -49,6 +60,18 @@ class Topo extends React.Component {
     this._isMounted = false;
   }
 
+  runSimulation = () => {
+    this.setState({ simulationIsRunning: true });
+  };
+
+  handleSimulationCompletion = (orderedJobs) => {
+    this.setState({
+      simulationIsComplete: true,
+      simulationIsRunning: false,
+      orderedJobs,
+    });
+  };
+
   renderJobStringRow = (jobs, deps) => {
     const {
       orderedJobs,
@@ -59,7 +82,7 @@ class Topo extends React.Component {
     for (let [p, j] of deps) {
       depsStringArr.push(`[${p}, ${j}]`);
     }
-    console.log(depsStringArr);
+
     const depsString = `[ ${depsStringArr.join(", ")} ]`;
 
     return (
@@ -99,7 +122,7 @@ class Topo extends React.Component {
         <div className="col d-flex justify-content-center">
           <button
             disabled={simulationIsRunning || simulationIsComplete}
-            onClick={this.topologicalSort}
+            onClick={this.runSimulation}
             className="btn btn-success"
           >
             Run Simulation
@@ -110,7 +133,7 @@ class Topo extends React.Component {
   };
 
   render() {
-    const { jobs, deps } = this.state;
+    const { jobs, deps, simulationIsRunning } = this.state;
     return (
       <>
         <AlgoHeader title="Topological Sort" description={description} />
@@ -118,7 +141,12 @@ class Topo extends React.Component {
         {jobs.length > 0 && this.renderJobStringRow(jobs, deps)}
         <div className="row grid">
           <div className="col">
-            <TopoGraph />
+            <TopoGraph
+              simulationIsRunning={simulationIsRunning}
+              onSimulationCompletion={this.handleSimulationCompletion}
+              jobs={jobs}
+              deps={deps}
+            />
           </div>
         </div>
       </>
