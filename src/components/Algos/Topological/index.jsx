@@ -42,30 +42,30 @@ class Topo extends React.Component {
 
     // test cases
 
-    // const jobs = [1, 2, 3, 4];
-    // const deps = [
-    //   [1, 2],
-    //   [1, 3],
-    //   [3, 2],
-    //   [4, 2],
-    //   [4, 3],
-    // ];
-
-    const jobs = [1, 2, 3, 4, 5, 6, 7, 8];
+    const jobs = [1, 2, 3, 4];
     const deps = [
       [1, 2],
       [1, 3],
-      [1, 4],
-      [1, 5],
-      [1, 6],
-      [1, 7],
-      [2, 8],
-      [3, 8],
-      [4, 8],
-      [5, 8],
-      [6, 8],
-      [7, 8],
+      [3, 2],
+      [4, 2],
+      [4, 3],
     ];
+
+    // const jobs = [1, 2, 3, 4, 5, 6, 7, 8];
+    // const deps = [
+    //   [1, 2],
+    //   [1, 3],
+    //   [1, 4],
+    //   [1, 5],
+    //   [1, 6],
+    //   [1, 7],
+    //   [2, 8],
+    //   [3, 8],
+    //   [4, 8],
+    //   [5, 8],
+    //   [6, 8],
+    //   [7, 8],
+    // ];
 
     //expected output [1, 4, 3, 2] or [4, 1, 3, 2]
 
@@ -79,19 +79,20 @@ class Topo extends React.Component {
   };
 
   runSimulation = () => {
-    this.setState({ simulationIsRunning: true });
+    this._isMounted && this.setState({ simulationIsRunning: true });
   };
 
   handleSimulationCompletion = (orderedJobs) => {
-    this.setState({
-      simulationIsComplete: true,
-      simulationIsRunning: false,
-      orderedJobs,
-    });
+    this._isMounted &&
+      this.setState({
+        simulationIsComplete: true,
+        simulationIsRunning: false,
+        orderedJobs,
+      });
   };
 
   updateOrderedJobs = (orderedJobs) => {
-    this.setState({ orderedJobs });
+    this._isMounted && this.setState({ orderedJobs });
   };
 
   renderJobStringRow = (jobs, deps) => {

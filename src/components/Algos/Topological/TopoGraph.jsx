@@ -50,79 +50,16 @@ const originPoints = [
 
 class TopoGraph extends React.Component {
   componentDidMount() {
-    this.topologicalSort();
+    this.initializeGraph();
   }
 
-  getOrderedJobs = async (graph, d3) => {
-    const { speed } = this.props;
-    await sleep(speed);
-    let orderedJobs = [];
-    for (let node of graph.nodes) {
-      d3.select(`[node-number='${node.job}']`).attr("filter", "url(#currNode)");
-      await sleep(speed);
-      let cyclic = await this.dftSearch(node, orderedJobs, d3);
-
-      if (cyclic) {
-        return [];
-      }
-    }
-
-    this.props.onSimulationCompletion(orderedJobs);
-    return orderedJobs;
-  };
-
-  dftSearch = async (node, orderedJobs, d3) => {
-    const { speed } = this.props;
-    d3.select(`[node-number='${node.job}']`).attr("filter", "url(#visiting)");
-    await sleep(speed);
-    if (node.visited) {
-      d3.select(`[node-number='${node.job}']`).attr("filter", "url(#visited)");
-      await sleep(speed);
-      return false;
-    }
-    if (node.visiting) {
-      return true;
-    }
-    node.visiting = true;
-    for (let prereq of node.prereqs) {
-      d3.select(`[node-link='${node.job}-${prereq.job}']`).attr(
-        "filter",
-        "url(#visiting)"
-      );
-      await sleep(speed);
-      let cyclic = await this.dftSearch(prereq, orderedJobs, d3);
-      d3.select(`[node-link='${node.job}-${prereq.job}']`).attr(
-        "filter",
-        "none"
-      );
-      await sleep(speed);
-      if (cyclic) {
-        return true;
-      }
-    }
-
-    node.visiting = false;
-    node.visited = true;
-    d3.select(`[node-number='${node.job}']`).attr("filter", "url(#visited)");
-    await sleep(speed);
-    orderedJobs.push(node.job);
-    this.props.updateOrderedJobs(orderedJobs);
-  };
-
-  topologicalSort = async () => {
-    // set up SVG for D3
-    const { jobs, deps, speed } = this.props;
+  initializeGraph = async () => {
     const width = 920;
     const height = 480;
     const colors = d3.scaleOrdinal(d3.schemeCategory10);
-    const svg = d3
-      .select("#topoGraph")
-      .append("svg")
-      .on("contextmenu", () => {
-        d3.event.preventDefault();
-      })
-      .attr("width", width)
-      .attr("height", height);
+
+    // set up SVG for D3
+    const svg = configureSvg(width, height);
 
     // set up initial nodes and links
     //  - nodes are known by 'id', not by index in array.
@@ -130,78 +67,19 @@ class TopoGraph extends React.Component {
     //  - links are always source < target; edge directions are set by 'left' and 'right'.
     const nodes = [
       //   { id: 0, reflexive: false },
-      //   { id: 1, reflexive: true },
-      //   { id: 2, reflexive: false },
     ];
     let lastNodeId = 0;
     const links = [
       //   { source: nodes[0], target: nodes[1], left: false, right: true },
-      //   { source: nodes[1], target: nodes[2], left: false, right: true },
     ];
 
     // init D3 force layout
-    const force = d3
-      .forceSimulation()
-      .force(
-        "link",
-        d3
-          .forceLink()
-          .id((d) => d.id)
-          .distance(300)
-      )
-      .force("charge", d3.forceManyBody().strength(-500))
-      .force("x", d3.forceX(width / 2))
-      .force("y", d3.forceY(height / 2))
-      .on("tick", tick);
+    const force = configureForce();
 
     // init D3 drag support
-    const drag = d3
-      .drag()
-      // Mac Firefox doesn't distinguish between left/right click when Ctrl is held...
-      .filter(() => d3.event.button === 0 || d3.event.button === 2)
-      .on("start", (d) => {
-        if (!d3.event.active) force.alphaTarget(0.3).restart();
+    const drag = configureDrag();
 
-        d.fx = d.x;
-        d.fy = d.y;
-      })
-      .on("drag", (d) => {
-        d.fx = d3.event.x;
-        d.fy = d3.event.y;
-      })
-      .on("end", (d) => {
-        if (!d3.event.active) force.alphaTarget(0);
-
-        d.fx = null;
-        d.fy = null;
-      });
-
-    // define arrow markers for graph links
-    svg
-      .append("svg:defs")
-      .append("svg:marker")
-      .attr("id", "end-arrow")
-      .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 1)
-      .attr("markerWidth", 5)
-      .attr("markerHeight", 5)
-      .attr("orient", "auto")
-      .append("svg:path")
-      .attr("d", "M0,-5L10,0L0,5")
-      .attr("fill", "#000");
-
-    svg
-      .append("svg:defs")
-      .append("svg:marker")
-      .attr("id", "start-arrow")
-      .attr("viewBox", "0 -5 10 10")
-      .attr("refX", -5)
-      .attr("markerWidth", 5)
-      .attr("markerHeight", 5)
-      .attr("orient", "auto")
-      .append("svg:path")
-      .attr("d", "M10,-5L0,0L10,5")
-      .attr("fill", "#000");
+    configureArrowMarkers();
 
     // line displayed when dragging new nodes
     const dragLine = svg
@@ -220,59 +98,120 @@ class TopoGraph extends React.Component {
     let mousedownNode = null;
     let mouseupNode = null;
 
-    await sleep(speed);
+    addFilterAttributes();
 
-    let jobGraph = new JobGraph(jobs);
-    for (let job of jobs) {
+    svg.on("x", mousedown).on("y", mousemove).on("z", mouseup);
+    d3.select(window).on("keydown", keydown).on("keyup", keyup);
+
+    restart();
+
+    // algo starts here
+
+    const {
+      jobs,
+      deps,
+      speed,
+      updateOrderedJobs,
+      onSimulationCompletion,
+    } = this.props;
+
+    const topologicalSort = async () => {
+      let jobGraph = new JobGraph(jobs);
+      for (let job of jobs) {
+        await sleep(speed);
+        mousedown();
+      }
       await sleep(speed);
-      mousedown();
-    }
-    await sleep(speed);
 
-    for (let [prereq, job] of deps) {
-      jobGraph.addPrereq(prereq, job);
+      for (let [prereq, job] of deps) {
+        jobGraph.addPrereq(prereq, job);
+        await sleep(speed);
+        d3.select(`[node-number="${job}"]`).dispatch("mousedown");
+        await sleep(speed);
+        d3.select(`[node-number='${prereq}']`).dispatch("mouseup");
+      }
+
       await sleep(speed);
-      d3.select(`[node-number="${job}"]`).dispatch("mousedown");
+
+      const orderedJobs = await getOrderedJobs(jobGraph);
+      updateOrderedJobs(orderedJobs);
       await sleep(speed);
-      d3.select(`[node-number='${prereq}']`).dispatch("mouseup");
+    };
+
+    const getOrderedJobs = async (graph) => {
+      await sleep(speed);
+      let orderedJobs = [];
+      for (let node of graph.nodes) {
+        d3.select(`[node-number='${node.job}']`).attr(
+          "filter",
+          "url(#currNode)"
+        );
+        await sleep(speed);
+        let cyclic = await dftSearch(node, orderedJobs);
+
+        if (cyclic) {
+          return [];
+        }
+      }
+
+      onSimulationCompletion(orderedJobs);
+      return orderedJobs;
+    };
+
+    const dftSearch = async (node, orderedJobs) => {
+      d3.select(`[node-number='${node.job}']`).attr("filter", "url(#visiting)");
+      await sleep(speed);
+      if (node.visited) {
+        d3.select(`[node-number='${node.job}']`).attr(
+          "filter",
+          "url(#visited)"
+        );
+        await sleep(speed);
+        return false;
+      }
+      if (node.visiting) {
+        return true;
+      }
+      node.visiting = true;
+      for (let prereq of node.prereqs) {
+        d3.select(`[node-link='${node.job}-${prereq.job}']`).attr(
+          "filter",
+          "url(#visiting)"
+        );
+        await sleep(speed);
+        let cyclic = await dftSearch(prereq, orderedJobs);
+        d3.select(`[node-link='${node.job}-${prereq.job}']`).attr(
+          "filter",
+          "none"
+        );
+        await sleep(speed);
+        if (cyclic) {
+          return true;
+        }
+      }
+
+      node.visiting = false;
+      node.visited = true;
+      d3.select(`[node-number='${node.job}']`).attr("filter", "url(#visited)");
+      await sleep(speed);
+      orderedJobs.push(node.job);
+      updateOrderedJobs(orderedJobs);
+    };
+
+    topologicalSort();
+
+    // function definitions below, no more algo logic
+
+    function configureSvg(width, height) {
+      return d3
+        .select("#topoGraph")
+        .append("svg")
+        .on("contextmenu", () => {
+          d3.event.preventDefault();
+        })
+        .attr("width", width)
+        .attr("height", height);
     }
-
-    const visited = svg.append("defs").append("filter").attr("id", "visited");
-    const visiting = svg.append("defs").append("filter").attr("id", "visiting");
-    const currNode = svg.append("defs").append("filter").attr("id", "currNode");
-
-    const nodeStatus = [visited, visiting, currNode];
-
-    visited
-      .append("feColorMatrix")
-      .attr("type", "matrix")
-      .attr("values", "1 1 1 1 1  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0");
-
-    visiting
-      .append("feColorMatrix")
-      .attr("type", "matrix")
-      .attr("values", "0 0 0 0 0  1 1 1 1 1  0 0 0 0 0  0 0 0 1 0");
-
-    currNode
-      .append("feColorMatrix")
-      .attr("type", "matrix")
-      .attr("values", "1 1 1 1 1  1 1 1 1 1  0 0 0 0 0  0 0 0 1 0");
-
-    for (let status of nodeStatus) {
-      status
-        .append("feGaussianBlur")
-        .attr("stdDeviation", 5)
-        .attr("result", "coloredBlur");
-      const merge = status.append("feMerge");
-      merge.append("feMergeNode").attr("in", "coloredBlur");
-      merge.append("feMergeNode").attr("in", "SourceGraphic");
-    }
-
-    await sleep(speed);
-
-    const orderedJobs = await this.getOrderedJobs(jobGraph, d3);
-    this.props.updateOrderedJobs(orderedJobs);
-    await sleep(speed);
 
     function resetMouseVars() {
       mousedownNode = null;
@@ -570,24 +509,114 @@ class TopoGraph extends React.Component {
       }
     }
 
-    // function markVisiting() {
-    //   let point = originPoints[originPointsIdx++ % originPoints.length];
+    function addFilterAttributes() {
+      const visited = svg.append("defs").append("filter").attr("id", "visited");
+      const visiting = svg
+        .append("defs")
+        .append("filter")
+        .attr("id", "visiting");
+      const currNode = svg
+        .append("defs")
+        .append("filter")
+        .attr("id", "currNode");
 
-    //   const node = {
-    //     id: ++lastNodeId,
-    //     reflexive: true,
-    //     x: point[0],
-    //     y: point[1],
-    //   };
-    //   nodes.push(node);
+      const nodeStatus = [visited, visiting, currNode];
 
-    //   restart();
-    // }
+      visited
+        .append("feColorMatrix")
+        .attr("type", "matrix")
+        .attr("values", "1 1 1 1 1  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0");
 
-    // app starts here
-    svg.on("x", mousedown).on("y", mousemove).on("z", mouseup);
-    d3.select(window).on("keydown", keydown).on("keyup", keyup);
-    restart();
+      visiting
+        .append("feColorMatrix")
+        .attr("type", "matrix")
+        .attr("values", "0 0 0 0 0  1 1 1 1 1  0 0 0 0 0  0 0 0 1 0");
+
+      currNode
+        .append("feColorMatrix")
+        .attr("type", "matrix")
+        .attr("values", "1 1 1 1 1  1 1 1 1 1  0 0 0 0 0  0 0 0 1 0");
+
+      for (let status of nodeStatus) {
+        status
+          .append("feGaussianBlur")
+          .attr("stdDeviation", 5)
+          .attr("result", "coloredBlur");
+        const merge = status.append("feMerge");
+        merge.append("feMergeNode").attr("in", "coloredBlur");
+        merge.append("feMergeNode").attr("in", "SourceGraphic");
+      }
+    }
+
+    function configureArrowMarkers() {
+      // define arrow markers for graph links
+      svg
+        .append("svg:defs")
+        .append("svg:marker")
+        .attr("id", "end-arrow")
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 5)
+        .attr("markerWidth", 5)
+        .attr("markerHeight", 5)
+        .attr("orient", "auto")
+        .append("svg:path")
+        .attr("d", "M0,-5L10,0L0,5")
+        .attr("fill", "#000");
+
+      svg
+        .append("svg:defs")
+        .append("svg:marker")
+        .attr("id", "start-arrow")
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", -5)
+        .attr("markerWidth", 5)
+        .attr("markerHeight", 5)
+        .attr("orient", "auto")
+        .append("svg:path")
+        .attr("d", "M10,-5L0,0L10,5")
+        .attr("fill", "#000");
+    }
+
+    function configureForce() {
+      return d3
+        .forceSimulation()
+        .force(
+          "link",
+          d3
+            .forceLink()
+            .id((d) => d.id)
+            .distance(300)
+        )
+        .force("charge", d3.forceManyBody().strength(-500))
+        .force("x", d3.forceX(width / 2))
+        .force("y", d3.forceY(height / 2))
+        .on("tick", tick);
+    }
+
+    function configureDrag() {
+      return (
+        d3
+          .drag()
+          // Mac Firefox doesn't distinguish between left/right click when Ctrl is held...
+          .filter(() => d3.event.button === 0 || d3.event.button === 2)
+          .on("start", (d) => {
+            if (!d3.event.active) force.alphaTarget(0.3).restart();
+
+            d.fx = d.x;
+            d.fy = d.y;
+          })
+          .on("drag", (d) => {
+            d.fx = d3.event.x;
+            d.fy = d3.event.y;
+          })
+          .on("end", (d) => {
+            if (!d3.event.active) force.alphaTarget(0);
+
+            d.fx = null;
+            d.fy = null;
+          })
+      );
+    }
   };
 
   render() {
@@ -596,6 +625,8 @@ class TopoGraph extends React.Component {
 }
 
 export default TopoGraph;
+
+// including Ross' license disclosures below since I borrowed heavily from his d3 graph code
 
 // LICENSE# (http://bl.ocks.org/rkirsling/5001347)
 // Copyright (c) 2013 Ross Kirsling
