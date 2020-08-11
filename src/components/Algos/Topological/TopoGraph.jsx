@@ -53,30 +53,49 @@ class TopoGraph extends React.Component {
     this.topologicalSort();
   }
 
-  getOrderedJobs = (graph) => {
+  getOrderedJobs = async (graph, d3) => {
+    const { speed } = this.props;
+    await sleep(speed);
     let orderedJobs = [];
-
     for (let node of graph.nodes) {
-      let cyclic = this.dftSearch(node, orderedJobs);
+      d3.select(`[node-number='${node.job}']`).attr("filter", "url(#currNode)");
+      await sleep(speed);
+      let cyclic = await this.dftSearch(node, orderedJobs, d3);
+
       if (cyclic) {
         return [];
       }
     }
 
     this.props.onSimulationCompletion(orderedJobs);
+    return orderedJobs;
   };
 
-  dftSearch = (node, orderedJobs) => {
+  dftSearch = async (node, orderedJobs, d3) => {
+    const { speed } = this.props;
+    d3.select(`[node-number='${node.job}']`).attr("filter", "url(#visiting)");
+    await sleep(speed);
     if (node.visited) {
+      d3.select(`[node-number='${node.job}']`).attr("filter", "url(#visited)");
+      await sleep(speed);
       return false;
     }
     if (node.visiting) {
       return true;
     }
     node.visiting = true;
-
     for (let prereq of node.prereqs) {
-      let cyclic = this.dftSearch(prereq, orderedJobs);
+      d3.select(`[node-link='${node.job}-${prereq.job}']`).attr(
+        "filter",
+        "url(#visiting)"
+      );
+      await sleep(speed);
+      let cyclic = await this.dftSearch(prereq, orderedJobs, d3);
+      d3.select(`[node-link='${node.job}-${prereq.job}']`).attr(
+        "filter",
+        "none"
+      );
+      await sleep(speed);
       if (cyclic) {
         return true;
       }
@@ -84,7 +103,10 @@ class TopoGraph extends React.Component {
 
     node.visiting = false;
     node.visited = true;
+    d3.select(`[node-number='${node.job}']`).attr("filter", "url(#visited)");
+    await sleep(speed);
     orderedJobs.push(node.job);
+    this.props.updateOrderedJobs(orderedJobs);
   };
 
   topologicalSort = async () => {
@@ -125,7 +147,7 @@ class TopoGraph extends React.Component {
         d3
           .forceLink()
           .id((d) => d.id)
-          .distance(150)
+          .distance(300)
       )
       .force("charge", d3.forceManyBody().strength(-500))
       .force("x", d3.forceX(width / 2))
@@ -160,7 +182,7 @@ class TopoGraph extends React.Component {
       .append("svg:marker")
       .attr("id", "end-arrow")
       .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 10)
+      .attr("refX", 1)
       .attr("markerWidth", 5)
       .attr("markerHeight", 5)
       .attr("orient", "auto")
@@ -173,7 +195,7 @@ class TopoGraph extends React.Component {
       .append("svg:marker")
       .attr("id", "start-arrow")
       .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 1)
+      .attr("refX", -5)
       .attr("markerWidth", 5)
       .attr("markerHeight", 5)
       .attr("orient", "auto")
@@ -203,14 +225,54 @@ class TopoGraph extends React.Component {
     let jobGraph = new JobGraph(jobs);
     for (let job of jobs) {
       await sleep(speed);
-      addCircle();
+      mousedown();
     }
+    await sleep(speed);
 
     for (let [prereq, job] of deps) {
       jobGraph.addPrereq(prereq, job);
+      await sleep(speed);
+      d3.select(`[node-number="${job}"]`).dispatch("mousedown");
+      await sleep(speed);
+      d3.select(`[node-number='${prereq}']`).dispatch("mouseup");
     }
 
-    this.getOrderedJobs(jobGraph);
+    const visited = svg.append("defs").append("filter").attr("id", "visited");
+    const visiting = svg.append("defs").append("filter").attr("id", "visiting");
+    const currNode = svg.append("defs").append("filter").attr("id", "currNode");
+
+    const nodeStatus = [visited, visiting, currNode];
+
+    visited
+      .append("feColorMatrix")
+      .attr("type", "matrix")
+      .attr("values", "1 1 1 1 1  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0");
+
+    visiting
+      .append("feColorMatrix")
+      .attr("type", "matrix")
+      .attr("values", "0 0 0 0 0  1 1 1 1 1  0 0 0 0 0  0 0 0 1 0");
+
+    currNode
+      .append("feColorMatrix")
+      .attr("type", "matrix")
+      .attr("values", "1 1 1 1 1  1 1 1 1 1  0 0 0 0 0  0 0 0 1 0");
+
+    for (let status of nodeStatus) {
+      status
+        .append("feGaussianBlur")
+        .attr("stdDeviation", 5)
+        .attr("result", "coloredBlur");
+      const merge = status.append("feMerge");
+      merge.append("feMergeNode").attr("in", "coloredBlur");
+      merge.append("feMergeNode").attr("in", "SourceGraphic");
+    }
+
+    await sleep(speed);
+
+    const orderedJobs = await this.getOrderedJobs(jobGraph, d3);
+    this.props.updateOrderedJobs(orderedJobs);
+    await sleep(speed);
 
     function resetMouseVars() {
       mousedownNode = null;
@@ -255,10 +317,12 @@ class TopoGraph extends React.Component {
       path.exit().remove();
 
       // add new links
+
       path = path
         .enter()
         .append("svg:path")
         .attr("class", "link")
+        .attr("node-link", (d) => `${d.target.id}-${d.source.id}`)
         .classed("selected", (d) => d === selectedLink)
         .style("marker-start", (d) => (d.left ? "url(#start-arrow)" : ""))
         .style("marker-end", (d) => (d.right ? "url(#end-arrow)" : ""))
@@ -295,7 +359,8 @@ class TopoGraph extends React.Component {
 
       g.append("svg:circle")
         .attr("class", "node")
-        .attr("r", 20)
+        .attr("node-number", (d) => d.id)
+        .attr("r", 30)
         .style("fill", (d) =>
           d === selectedNode
             ? d3.rgb(colors(d.id)).brighter().toString()
@@ -384,10 +449,8 @@ class TopoGraph extends React.Component {
       force.alphaTarget(0.3).restart();
     }
 
-    function addCircle() {
+    function mousedown() {
       // because :active only works in WebKit?
-
-      svg.classed("active", true);
 
       let point = originPoints[originPointsIdx++ % originPoints.length];
 
@@ -507,11 +570,22 @@ class TopoGraph extends React.Component {
       }
     }
 
+    // function markVisiting() {
+    //   let point = originPoints[originPointsIdx++ % originPoints.length];
+
+    //   const node = {
+    //     id: ++lastNodeId,
+    //     reflexive: true,
+    //     x: point[0],
+    //     y: point[1],
+    //   };
+    //   nodes.push(node);
+
+    //   restart();
+    // }
+
     // app starts here
-    svg
-      .on("mousedown", addCircle)
-      .on("mousemove", mousemove)
-      .on("mouseup", mouseup);
+    svg.on("x", mousedown).on("y", mousemove).on("z", mouseup);
     d3.select(window).on("keydown", keydown).on("keyup", keyup);
     restart();
   };
