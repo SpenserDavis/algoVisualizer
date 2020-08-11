@@ -133,7 +133,12 @@ class Topo extends React.Component {
   };
 
   render() {
-    const { jobs, deps, simulationIsRunning } = this.state;
+    const {
+      jobs,
+      deps,
+      simulationIsRunning,
+      simulationIsComplete,
+    } = this.state;
     return (
       <>
         <AlgoHeader title="Topological Sort" description={description} />
@@ -141,12 +146,14 @@ class Topo extends React.Component {
         {jobs.length > 0 && this.renderJobStringRow(jobs, deps)}
         <div className="row grid">
           <div className="col">
-            <TopoGraph
-              simulationIsRunning={simulationIsRunning}
-              onSimulationCompletion={this.handleSimulationCompletion}
-              jobs={jobs}
-              deps={deps}
-            />
+            {(simulationIsRunning || simulationIsComplete) && (
+              <TopoGraph
+                onSimulationCompletion={this.handleSimulationCompletion}
+                jobs={jobs}
+                deps={deps}
+                speed={this.props.speed * 10}
+              />
+            )}
           </div>
         </div>
       </>
