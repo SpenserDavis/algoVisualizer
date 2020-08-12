@@ -150,8 +150,7 @@ class Apples extends React.Component {
     return infectedNeighbors;
   };
 
-  renderGrid = () => {
-    const { appleMatrix } = this.state;
+  renderGrid = (appleMatrix) => {
     return (
       <div className="row grid">
         <div className="col">
@@ -173,11 +172,26 @@ class Apples extends React.Component {
     );
   };
 
+  renderDayCounter = (
+    simulationIsComplete,
+    simulationIsRunning,
+    dayCounter
+  ) => {
+    return (
+      <div className="col d-flex justify-content-center align-items-end">
+        <h6 className={simulationIsComplete ? "simCompleteBox" : ""}>
+          Days: {(simulationIsRunning || simulationIsComplete) && dayCounter}
+        </h6>
+      </div>
+    );
+  };
+
   render() {
     const {
       simulationIsComplete,
       simulationIsRunning,
       dayCounter,
+      appleMatrix,
     } = this.state;
     return (
       <>
@@ -189,12 +203,12 @@ class Apples extends React.Component {
           simulationIsRunning={simulationIsRunning}
           simulationIsComplete={simulationIsComplete}
         />
-        <div className="col d-flex justify-content-center align-items-end">
-          <h6 className={simulationIsComplete ? "simCompleteBox" : ""}>
-            Days: {(simulationIsRunning || simulationIsComplete) && dayCounter}
-          </h6>
-        </div>
-        {this.renderGrid()}
+        {this.renderDayCounter(
+          simulationIsComplete,
+          simulationIsRunning,
+          dayCounter
+        )}
+        {this.renderGrid(appleMatrix)}
       </>
     );
   }

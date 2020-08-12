@@ -47,7 +47,8 @@ class Topo extends React.Component {
     let prereq = Math.ceil(Math.random() * numJobs);
     let job = Math.ceil(Math.random() * numJobs);
     while (prereq === job || deps.indexOf([prereq, job]) !== -1) {
-      [prereq, job] = this.generateRandomDep(i, numJobs, deps);
+      prereq = Math.ceil(Math.random() * numJobs);
+      job = Math.ceil(Math.random() * numJobs);
     }
     return [prereq, job];
   };

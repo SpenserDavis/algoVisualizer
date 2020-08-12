@@ -241,8 +241,7 @@ class Rivers extends React.Component {
     return `gridSquare ${colorClass} ${currNodeClass} ${visitedNodeClass} ${riverNode}`;
   };
 
-  renderGrid = () => {
-    const { riverMatrix } = this.state;
+  renderGrid = (riverMatrix) => {
     return (
       <div className="row grid">
         <div className="col">
@@ -264,11 +263,30 @@ class Rivers extends React.Component {
     );
   };
 
+  renderRiverSizes = (
+    simulationIsComplete,
+    simulationIsRunning,
+    riverSizes
+  ) => {
+    return (
+      <div className="col d-flex justify-content-center align-items-end">
+        <h6
+          className={`no-wrap ${simulationIsComplete ? "simCompleteBox" : ""}`}
+        >
+          Sizes:{" "}
+          {(simulationIsRunning || simulationIsComplete) &&
+            `[${riverSizes.toString()}]`}
+        </h6>
+      </div>
+    );
+  };
+
   render() {
     const {
       simulationIsComplete,
       simulationIsRunning,
       riverSizes,
+      riverMatrix,
     } = this.state;
     return (
       <>
@@ -280,18 +298,12 @@ class Rivers extends React.Component {
           simulationIsRunning={simulationIsRunning}
           simulationIsComplete={simulationIsComplete}
         />
-        <div className="col d-flex justify-content-center align-items-end">
-          <h6
-            className={`no-wrap ${
-              simulationIsComplete ? "simCompleteBox" : ""
-            }`}
-          >
-            Sizes:{" "}
-            {(simulationIsRunning || simulationIsComplete) &&
-              `[${riverSizes.toString()}]`}
-          </h6>
-        </div>
-        {this.renderGrid()}
+        {this.renderRiverSizes(
+          simulationIsComplete,
+          simulationIsRunning,
+          riverSizes
+        )}
+        {this.renderGrid(riverMatrix)}
       </>
     );
   }

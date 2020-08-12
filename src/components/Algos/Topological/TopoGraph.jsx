@@ -499,6 +499,8 @@ class TopoGraph extends React.Component {
           }
           restart();
           break;
+        default:
+          break;
       }
     }
 

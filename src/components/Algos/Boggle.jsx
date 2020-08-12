@@ -316,8 +316,7 @@ class Boggle extends React.Component {
     return `gridSquare ${colorClass} ${currNodeClass} ${visitingNodeClass} ${wordNode}`;
   };
 
-  renderGrid = () => {
-    const { board } = this.state;
+  renderGrid = (board) => {
     return (
       <div className="row grid">
         <div className="col">
@@ -339,11 +338,40 @@ class Boggle extends React.Component {
     );
   };
 
+  renderTargetAndFoundWords = (
+    simulationIsComplete,
+    simulationIsRunning,
+    foundWords,
+    targetWords
+  ) => {
+    return (
+      <div
+        id="target-words"
+        className="row d-flex justify-content-between align-items-center"
+      >
+        <div className="col">
+          <h6>Target Words: </h6>
+          <span> {targetWords.join(", ")}</span>
+        </div>
+        <div className={`col ${simulationIsComplete ? "simCompleteBox" : ""}`}>
+          <h6>Found Words:</h6>
+          <span>
+            {" "}
+            {(simulationIsRunning || simulationIsComplete) &&
+              `[${Object.keys(foundWords).join(", ")}]`}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   render() {
     const {
       simulationIsComplete,
       simulationIsRunning,
       foundWords,
+      targetWords,
+      board,
     } = this.state;
     return (
       <>
@@ -355,27 +383,13 @@ class Boggle extends React.Component {
           simulationIsRunning={simulationIsRunning}
           simulationIsComplete={simulationIsComplete}
         />
-
-        <div
-          id="target-words"
-          className="row d-flex justify-content-between align-items-center"
-        >
-          <div className="col">
-            <h6>Target Words: </h6>
-            <span> {this.state.targetWords.join(", ")}</span>
-          </div>
-          <div
-            className={`col ${simulationIsComplete ? "simCompleteBox" : ""}`}
-          >
-            <h6>Found Words:</h6>
-            <span>
-              {" "}
-              {(simulationIsRunning || simulationIsComplete) &&
-                `[${Object.keys(foundWords).join(", ")}]`}
-            </span>
-          </div>
-        </div>
-        {this.renderGrid()}
+        {this.renderTargetAndFoundWords(
+          simulationIsComplete,
+          simulationIsRunning,
+          foundWords,
+          targetWords
+        )}
+        {this.renderGrid(board)}
       </>
     );
   }
