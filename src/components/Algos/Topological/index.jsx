@@ -2,6 +2,7 @@ import React from "react";
 import description from "../../../algoProblemDescriptions/topological";
 import AlgoHeader from "../../../components/AlgoHeader";
 import TopoGraph from "./TopoGraph";
+import Buttons from "../../Buttons";
 
 const numJobsLowerBound = 3;
 const numJobsUpperBound = 8;
@@ -104,32 +105,6 @@ class Topo extends React.Component {
     );
   };
 
-  renderButtonRow = () => {
-    const { simulationIsRunning, simulationIsComplete } = this.state;
-    return (
-      <div className="row d-flex justify-content-between">
-        <div className="col d-flex justify-content-center">
-          <button
-            disabled={simulationIsRunning}
-            onClick={this.generateUnorderedJobList}
-            className="btn btn-primary"
-          >
-            Randomize Job List
-          </button>
-        </div>
-        <div className="col d-flex justify-content-center">
-          <button
-            disabled={simulationIsRunning || simulationIsComplete}
-            onClick={this.runSimulation}
-            className="btn btn-success"
-          >
-            Run Simulation
-          </button>
-        </div>
-      </div>
-    );
-  };
-
   render() {
     const {
       jobs,
@@ -140,7 +115,13 @@ class Topo extends React.Component {
     return (
       <>
         <AlgoHeader title="Topological Sort" description={description} />
-        {this.renderButtonRow()}
+        <Buttons
+          randomize={this.generateUnorderedJobList}
+          runSimulation={this.runSimulation}
+          widget={"Job List"}
+          simulationIsRunning={simulationIsRunning}
+          simulationIsComplete={simulationIsComplete}
+        />
         {jobs.length > 0 && this.renderJobStringRow(jobs, deps)}
         <div className="row grid">
           <div className="col">

@@ -2,6 +2,7 @@ import React from "react";
 import description from "../../algoProblemDescriptions/rivers";
 import AlgoHeader from "../../components/AlgoHeader";
 import { sleep, shuffle } from "../../services/utilities";
+import Buttons from "../Buttons";
 
 const colors = { 0: "white", 1: "blue" };
 
@@ -240,47 +241,6 @@ class Rivers extends React.Component {
     return `gridSquare ${colorClass} ${currNodeClass} ${visitedNodeClass} ${riverNode}`;
   };
 
-  renderButtonRow = () => {
-    const {
-      simulationIsRunning,
-      simulationIsComplete,
-      riverSizes,
-    } = this.state;
-    return (
-      <div className="row d-flex justify-content-between">
-        <div className="col d-flex justify-content-center">
-          <button
-            disabled={simulationIsRunning}
-            onClick={this.getRandomizedMatrix}
-            className="btn btn-primary"
-          >
-            Randomize Grid
-          </button>
-        </div>
-        <div className="col d-flex justify-content-center">
-          <button
-            disabled={simulationIsRunning || simulationIsComplete}
-            onClick={this.getRiverSizes}
-            className="btn btn-success"
-          >
-            Run Simulation
-          </button>
-        </div>
-        <div className="col d-flex justify-content-center align-items-end">
-          <h6
-            className={`no-wrap ${
-              simulationIsComplete ? "simCompleteBox" : ""
-            }`}
-          >
-            Sizes:{" "}
-            {(simulationIsRunning || simulationIsComplete) &&
-              `[${riverSizes.toString()}]`}
-          </h6>
-        </div>
-      </div>
-    );
-  };
-
   renderGrid = () => {
     const { riverMatrix } = this.state;
     return (
@@ -305,10 +265,32 @@ class Rivers extends React.Component {
   };
 
   render() {
+    const {
+      simulationIsComplete,
+      simulationIsRunning,
+      riverSizes,
+    } = this.state;
     return (
       <>
         <AlgoHeader title="River Sizes" description={description} />
-        {this.renderButtonRow()}
+        <Buttons
+          randomize={this.getRandomizedMatrix}
+          runSimulation={this.getRiverSizes}
+          widget={"River Matrix"}
+          simulationIsRunning={simulationIsRunning}
+          simulationIsComplete={simulationIsComplete}
+        />
+        <div className="col d-flex justify-content-center align-items-end">
+          <h6
+            className={`no-wrap ${
+              simulationIsComplete ? "simCompleteBox" : ""
+            }`}
+          >
+            Sizes:{" "}
+            {(simulationIsRunning || simulationIsComplete) &&
+              `[${riverSizes.toString()}]`}
+          </h6>
+        </div>
         {this.renderGrid()}
       </>
     );

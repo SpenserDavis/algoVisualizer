@@ -2,6 +2,7 @@ import React from "react";
 import description from "../../algoProblemDescriptions/apples";
 import AlgoHeader from "../AlgoHeader";
 import { sleep } from "../../services/utilities";
+import Buttons from "../Buttons";
 
 const colors = { 0: "white", 1: "green", 2: "purple" };
 
@@ -149,43 +150,6 @@ class Apples extends React.Component {
     return infectedNeighbors;
   };
 
-  renderButtonRow = () => {
-    const {
-      simulationIsRunning,
-      simulationIsComplete,
-      dayCounter,
-    } = this.state;
-    return (
-      <div className="row">
-        <div className="col"></div>
-        <div className="col d-flex justify-content-center">
-          <button
-            disabled={simulationIsRunning}
-            onClick={this.getRandomizedMatrix}
-            className="btn btn-primary"
-          >
-            Randomize Grid
-          </button>
-        </div>
-        <div className="col d-flex justify-content-center">
-          <button
-            disabled={simulationIsRunning || simulationIsComplete}
-            onClick={this.runSimulation}
-            className="btn btn-success"
-          >
-            Run Simulation
-          </button>
-        </div>
-        <div className="col d-flex justify-content-center align-items-end">
-          <h6 className={simulationIsComplete ? "simCompleteBox" : ""}>
-            Days: {(simulationIsRunning || simulationIsComplete) && dayCounter}
-          </h6>
-        </div>
-        <div className="col"></div>
-      </div>
-    );
-  };
-
   renderGrid = () => {
     const { appleMatrix } = this.state;
     return (
@@ -210,10 +174,26 @@ class Apples extends React.Component {
   };
 
   render() {
+    const {
+      simulationIsComplete,
+      simulationIsRunning,
+      dayCounter,
+    } = this.state;
     return (
       <>
         <AlgoHeader title="Rotten Apples" description={description} />
-        {this.renderButtonRow()}
+        <Buttons
+          randomize={this.getRandomizedMatrix}
+          runSimulation={this.runSimulation}
+          widget={"Apple Matrix"}
+          simulationIsRunning={simulationIsRunning}
+          simulationIsComplete={simulationIsComplete}
+        />
+        <div className="col d-flex justify-content-center align-items-end">
+          <h6 className={simulationIsComplete ? "simCompleteBox" : ""}>
+            Days: {(simulationIsRunning || simulationIsComplete) && dayCounter}
+          </h6>
+        </div>
         {this.renderGrid()}
       </>
     );

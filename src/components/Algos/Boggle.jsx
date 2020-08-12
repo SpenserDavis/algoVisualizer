@@ -2,6 +2,7 @@ import React from "react";
 import description from "../../algoProblemDescriptions/boggle";
 import AlgoHeader from "../../components/AlgoHeader";
 import { sleep, shuffle } from "../../services/utilities";
+import Buttons from "../Buttons";
 
 class Trie {
   constructor(words) {
@@ -315,47 +316,6 @@ class Boggle extends React.Component {
     return `gridSquare ${colorClass} ${currNodeClass} ${visitingNodeClass} ${wordNode}`;
   };
 
-  renderButtonRow = () => {
-    const {
-      simulationIsRunning,
-      simulationIsComplete,
-      foundWords,
-    } = this.state;
-    return (
-      <div className="row d-flex justify-content-between">
-        <div className="col d-flex justify-content-center">
-          <button
-            disabled={simulationIsRunning}
-            onClick={this.randomizeBoardAndWords}
-            className="btn btn-primary"
-          >
-            Randomize Board
-          </button>
-        </div>
-        <div className="col d-flex justify-content-center">
-          <button
-            disabled={simulationIsRunning || simulationIsComplete}
-            onClick={this.findWords}
-            className="btn btn-success"
-          >
-            Run Simulation
-          </button>
-        </div>
-        <div className="col d-flex justify-content-center align-items-end">
-          <h6
-            className={`no-wrap ${
-              simulationIsComplete ? "simCompleteBox" : ""
-            }`}
-          >
-            Found Words: <br></br>
-            {(simulationIsRunning || simulationIsComplete) &&
-              `[${Object.keys(foundWords).join(", ")}]`}
-          </h6>
-        </div>
-      </div>
-    );
-  };
-
   renderGrid = () => {
     const { board } = this.state;
     return (
@@ -380,13 +340,40 @@ class Boggle extends React.Component {
   };
 
   render() {
+    const {
+      simulationIsComplete,
+      simulationIsRunning,
+      foundWords,
+    } = this.state;
     return (
       <>
         <AlgoHeader title="Boggle Board" description={description} />
-        {this.renderButtonRow()}
-        <div id="target-words" className="row d-flex align-items-start">
-          <strong className="no-wrap">Target Words: </strong>
-          <span>{this.state.targetWords.join(", ")}</span>
+        <Buttons
+          randomize={this.randomizeBoardAndWords}
+          runSimulation={this.findWords}
+          widget={"Board"}
+          simulationIsRunning={simulationIsRunning}
+          simulationIsComplete={simulationIsComplete}
+        />
+
+        <div
+          id="target-words"
+          className="row d-flex justify-content-between align-items-center"
+        >
+          <div className="col">
+            <h6>Target Words: </h6>
+            <span> {this.state.targetWords.join(", ")}</span>
+          </div>
+          <div
+            className={`col ${simulationIsComplete ? "simCompleteBox" : ""}`}
+          >
+            <h6>Found Words:</h6>
+            <span>
+              {" "}
+              {(simulationIsRunning || simulationIsComplete) &&
+                `[${Object.keys(foundWords).join(", ")}]`}
+            </span>
+          </div>
         </div>
         {this.renderGrid()}
       </>

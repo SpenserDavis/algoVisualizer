@@ -4,6 +4,7 @@ import AlgoHeader from "../../AlgoHeader";
 import "./merge.css";
 import { sleep } from "../../../services/utilities";
 import { ArcherContainer, ArcherElement } from "react-archer";
+import Buttons from "../../Buttons";
 
 const listSize = 5;
 const gridWidth = listSize * 2 + 3;
@@ -325,41 +326,23 @@ class Merge extends React.Component {
     return <ArcherContainer strokeColor="black">{grid}</ArcherContainer>;
   };
 
-  renderButtonRow = () => {
-    const { simulationIsRunning, simulationIsComplete } = this.state;
-    return (
-      <div className="row">
-        <div className="col"></div>
-        <div className="col d-flex justify-content-center">
-          <button
-            disabled={simulationIsRunning}
-            onClick={this.initializeLists}
-            className="btn btn-primary"
-          >
-            Generate New Lists
-          </button>
-        </div>
-        <div className="col d-flex justify-content-center">
-          <button
-            disabled={simulationIsRunning || simulationIsComplete}
-            onClick={this.performMerge}
-            className="btn btn-success"
-          >
-            Merge Lists
-          </button>
-        </div>
-
-        <div className="col"></div>
-      </div>
-    );
-  };
-
   render() {
-    const { listOne, listTwo } = this.state;
+    const {
+      listOne,
+      listTwo,
+      simulationIsRunning,
+      simulationIsComplete,
+    } = this.state;
     return (
       <>
         <AlgoHeader title="Merge Lists" description={description} />
-        {this.renderButtonRow()}
+        <Buttons
+          widget={"Lists"}
+          simulationIsRunning={simulationIsRunning}
+          simulationIsComplete={simulationIsComplete}
+          randomize={this.initializeLists}
+          runSimulation={this.performMerge}
+        />
         <div className="grid-container">
           {Object.keys(listOne).length > 0 &&
             this.renderLists(listOne, listTwo)}
