@@ -1,4 +1,4 @@
-svg {
+.nodeGraph > svg {
   background-color: #3f6f7c;
   cursor: default;
   -webkit-user-select: none;

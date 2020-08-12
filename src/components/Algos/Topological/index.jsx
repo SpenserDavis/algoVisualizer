@@ -1,11 +1,10 @@
 import React from "react";
 import description from "../../../algoProblemDescriptions/topological";
 import AlgoHeader from "../../../components/AlgoHeader";
-import { sleep } from "../../../services/utilities";
 import TopoGraph from "./TopoGraph";
 
 const numJobsLowerBound = 3;
-const numJobsUpperBound = 9;
+const numJobsUpperBound = 8;
 
 class Topo extends React.Component {
   constructor(props) {
@@ -29,52 +28,26 @@ class Topo extends React.Component {
   }
 
   generateUnorderedJobList = () => {
-    // const numJobs = Math.floor(
-    //   Math.random() * (numJobsUpperBound - numJobsLowerBound) +
-    //     numJobsLowerBound
-    // );
-    // const jobs = [];
-    // const deps = [];
-    // for (let i = 0; i < numJobs; i++) {
-    //   jobs[i] = i + 1;
-    //   deps.push(this.generateRandomDep(numJobs));
-    // }
+    const numJobs = Math.floor(
+      Math.random() * (numJobsUpperBound - numJobsLowerBound) +
+        numJobsLowerBound
+    );
+    const jobs = [];
+    const deps = [];
+    for (let i = 0; i < numJobs; i++) {
+      jobs[i] = i + 1;
+      deps.push(this.generateRandomDep(i + 1, numJobs, deps));
+    }
 
-    // test cases
-
-    const jobs = [1, 2, 3, 4];
-    const deps = [
-      [1, 2],
-      [1, 3],
-      [3, 2],
-      [4, 2],
-      [4, 3],
-    ];
-
-    // const jobs = [1, 2, 3, 4, 5, 6, 7, 8];
-    // const deps = [
-    //   [1, 2],
-    //   [1, 3],
-    //   [1, 4],
-    //   [1, 5],
-    //   [1, 6],
-    //   [1, 7],
-    //   [2, 8],
-    //   [3, 8],
-    //   [4, 8],
-    //   [5, 8],
-    //   [6, 8],
-    //   [7, 8],
-    // ];
-
-    //expected output [1, 4, 3, 2] or [4, 1, 3, 2]
-
-    this.setState({ jobs, deps });
+    this.setState({ jobs, deps, simulationIsComplete: false });
   };
 
-  generateRandomDep = (numJobs) => {
-    const prereq = Math.floor(Math.random() * numJobs);
-    const job = Math.floor(Math.random() * numJobs);
+  generateRandomDep = (i, numJobs, deps) => {
+    let prereq = Math.ceil(Math.random() * numJobs);
+    let job = Math.ceil(Math.random() * numJobs);
+    while (prereq === job || deps.indexOf([prereq, job]) !== -1) {
+      [prereq, job] = this.generateRandomDep(i, numJobs, deps);
+    }
     return [prereq, job];
   };
 
@@ -132,11 +105,7 @@ class Topo extends React.Component {
   };
 
   renderButtonRow = () => {
-    const {
-      simulationIsRunning,
-      simulationIsComplete,
-      orderedJobs,
-    } = this.state;
+    const { simulationIsRunning, simulationIsComplete } = this.state;
     return (
       <div className="row d-flex justify-content-between">
         <div className="col d-flex justify-content-center">
@@ -192,3 +161,32 @@ class Topo extends React.Component {
 }
 
 export default Topo;
+
+// test cases
+
+// const jobs = [1, 2, 3, 4];
+// const deps = [
+//   [1, 2],
+//   [1, 3],
+//   [3, 2],
+//   [4, 2],
+//   [4, 3],
+// ];
+// expected output [1, 4, 3, 2] or [4, 1, 3, 2]
+
+// const jobs = [1, 2, 3, 4, 5, 6, 7, 8];
+// const deps = [
+//   [1, 2],
+//   [1, 3],
+//   [1, 4],
+//   [1, 5],
+//   [1, 6],
+//   [1, 7],
+//   [2, 8],
+//   [3, 8],
+//   [4, 8],
+//   [5, 8],
+//   [6, 8],
+//   [7, 8],
+// ];
+// expected output [1, 2, 3, 4, 5, 6, 7, 8]

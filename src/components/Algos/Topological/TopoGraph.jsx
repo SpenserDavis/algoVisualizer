@@ -100,6 +100,7 @@ class TopoGraph extends React.Component {
 
     addFilterAttributes();
 
+    //preserving names of functions for future improvements to app
     svg.on("x", mousedown).on("y", mousemove).on("z", mouseup);
     d3.select(window).on("keydown", keydown).on("keyup", keyup);
 
@@ -134,7 +135,7 @@ class TopoGraph extends React.Component {
       await sleep(speed);
 
       const orderedJobs = await getOrderedJobs(jobGraph);
-      updateOrderedJobs(orderedJobs);
+      onSimulationCompletion(orderedJobs);
       await sleep(speed);
     };
 
@@ -142,10 +143,7 @@ class TopoGraph extends React.Component {
       await sleep(speed);
       let orderedJobs = [];
       for (let node of graph.nodes) {
-        d3.select(`[node-number='${node.job}']`).attr(
-          "filter",
-          "url(#currNode)"
-        );
+        highlightNode(node, "#currNode");
         await sleep(speed);
         let cyclic = await dftSearch(node, orderedJobs);
 
@@ -154,18 +152,14 @@ class TopoGraph extends React.Component {
         }
       }
 
-      onSimulationCompletion(orderedJobs);
       return orderedJobs;
     };
 
     const dftSearch = async (node, orderedJobs) => {
-      d3.select(`[node-number='${node.job}']`).attr("filter", "url(#visiting)");
+      highlightNode(node, "#visiting");
       await sleep(speed);
       if (node.visited) {
-        d3.select(`[node-number='${node.job}']`).attr(
-          "filter",
-          "url(#visited)"
-        );
+        highlightNode(node, "#visited");
         await sleep(speed);
         return false;
       }
@@ -174,16 +168,10 @@ class TopoGraph extends React.Component {
       }
       node.visiting = true;
       for (let prereq of node.prereqs) {
-        d3.select(`[node-link='${node.job}-${prereq.job}']`).attr(
-          "filter",
-          "url(#visiting)"
-        );
+        highlightLink(node, prereq, "#visiting");
         await sleep(speed);
         let cyclic = await dftSearch(prereq, orderedJobs);
-        d3.select(`[node-link='${node.job}-${prereq.job}']`).attr(
-          "filter",
-          "none"
-        );
+        highlightLink(node, prereq, "none");
         await sleep(speed);
         if (cyclic) {
           return true;
@@ -192,7 +180,7 @@ class TopoGraph extends React.Component {
 
       node.visiting = false;
       node.visited = true;
-      d3.select(`[node-number='${node.job}']`).attr("filter", "url(#visited)");
+      highlightNode(node, "#visited");
       await sleep(speed);
       orderedJobs.push(node.job);
       updateOrderedJobs(orderedJobs);
@@ -201,6 +189,21 @@ class TopoGraph extends React.Component {
     topologicalSort();
 
     // function definitions below, no more algo logic
+
+    function highlightNode(node, filter) {
+      d3.select(`[node-number='${node.job}']`).attr("filter", `url(${filter})`);
+    }
+
+    function highlightLink(node, prereq, filter) {
+      d3.select(`[node-link='${node.job}-${prereq.job}']`).attr(
+        "filter",
+        `url(${filter})`
+      );
+      d3.select(`[node-link='${prereq.job}-${node.job}']`).attr(
+        "filter",
+        `url(${filter})`
+      );
+    }
 
     function configureSvg(width, height) {
       return d3
@@ -404,18 +407,6 @@ class TopoGraph extends React.Component {
       restart();
     }
 
-    function mousemove() {
-      if (!mousedownNode) return;
-
-      // update drag line
-      dragLine.attr(
-        "d",
-        `M${mousedownNode.x},${mousedownNode.y}L${d3.mouse(this)[0]},${
-          d3.mouse(this)[1]
-        }`
-      );
-    }
-
     function mouseup() {
       if (mousedownNode) {
         // hide drag line
@@ -427,6 +418,18 @@ class TopoGraph extends React.Component {
 
       // clear mouse event vars
       resetMouseVars();
+    }
+
+    function mousemove() {
+      if (!mousedownNode) return;
+
+      // update drag line
+      dragLine.attr(
+        "d",
+        `M${mousedownNode.x},${mousedownNode.y}L${d3.mouse(this)[0]},${
+          d3.mouse(this)[1]
+        }`
+      );
     }
 
     function spliceLinksForNode(node) {
@@ -555,7 +558,7 @@ class TopoGraph extends React.Component {
         .append("svg:marker")
         .attr("id", "end-arrow")
         .attr("viewBox", "0 -5 10 10")
-        .attr("refX", 5)
+        .attr("refX", 15)
         .attr("markerWidth", 5)
         .attr("markerHeight", 5)
         .attr("orient", "auto")
@@ -620,7 +623,7 @@ class TopoGraph extends React.Component {
   };
 
   render() {
-    return <div id="topoGraph"></div>;
+    return <div className="nodeGraph" id="topoGraph"></div>;
   }
 }
 
