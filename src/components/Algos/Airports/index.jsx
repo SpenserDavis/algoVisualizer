@@ -122,8 +122,10 @@ class Airports extends React.Component {
         <div className="row d-flex justify-content-start align-items-center">
           <h6>Routes: {routesString}</h6>
         </div>
-        <div className="row d-flex justify-content-between align-items-center">
+        <div className="row d-flex justify-content-start align-items-center">
           <h6 className="no-wrap">Starting Airport: {startingAirport}</h6>{" "}
+        </div>
+        <div className="row d-flex justify-content-end align-items-center">
           <h6
             className={`no-wrap ${
               simulationIsComplete ? "simCompleteBox" : ""

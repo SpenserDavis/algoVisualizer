@@ -34,19 +34,32 @@ class Topo extends React.Component {
         numJobsLowerBound
     );
     const jobs = [];
-    const deps = [];
+    const depList = {};
     for (let i = 0; i < numJobs; i++) {
       jobs[i] = i + 1;
-      deps.push(this.generateRandomDep(i + 1, numJobs, deps));
+      const [prereq, job] = this.generateRandomDep(numJobs, depList);
+      if (job in depList) {
+        depList[job].push(prereq);
+      } else {
+        depList[job] = [prereq];
+      }
     }
+    const deps = [];
 
+    for (let job in depList) {
+      for (let prereq of depList[job]) deps.push([prereq, parseInt(job)]);
+    }
+    console.log(deps);
     this.setState({ jobs, deps, simulationIsComplete: false });
   };
 
-  generateRandomDep = (i, numJobs, deps) => {
+  generateRandomDep = (numJobs, depList) => {
     let prereq = Math.ceil(Math.random() * numJobs);
     let job = Math.ceil(Math.random() * numJobs);
-    while (prereq === job || deps.indexOf([prereq, job]) !== -1) {
+    while (
+      prereq === job ||
+      (job in depList && depList[job].indexOf(prereq) !== -1)
+    ) {
       prereq = Math.ceil(Math.random() * numJobs);
       job = Math.ceil(Math.random() * numJobs);
     }

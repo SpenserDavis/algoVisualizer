@@ -178,7 +178,7 @@ class Apples extends React.Component {
     dayCounter
   ) => {
     return (
-      <div className="col d-flex justify-content-center align-items-end">
+      <div className="col d-flex justify-content-end align-items-end">
         <h6 className={simulationIsComplete ? "simCompleteBox" : ""}>
           Days: {(simulationIsRunning || simulationIsComplete) && dayCounter}
         </h6>
