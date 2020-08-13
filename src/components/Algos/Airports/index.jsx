@@ -27,7 +27,7 @@ const allAirports = [
 ];
 
 const numRoutesLowerBound = 3;
-const numRoutesUpperBound = 12;
+const numRoutesUpperBound = 10;
 
 class Airports extends React.Component {
   constructor(props) {
@@ -63,26 +63,43 @@ class Airports extends React.Component {
     const airports = randomAirports.slice(0, numAirports);
     const startingAirport =
       airports[Math.floor(Math.random() * airports.length)];
-    const routes = [];
-
+    const connections = {};
     for (let i = 0; i < numRoutes; i++) {
-      routes.push(this.generateRandomConnection(airports, routes));
+      this.generateRandomConnection(airports, connections);
     }
-    this._isMounted && this.setState({ airports, routes, startingAirport });
+
+    const routes = [];
+    for (let start in connections) {
+      for (let destination of connections[start])
+        routes.push([start, destination]);
+    }
+
+    this._isMounted &&
+      this.setState({
+        airports,
+        routes,
+        startingAirport,
+        simulationIsComplete: false,
+        minConnections: 0,
+      });
   };
 
-  generateRandomConnection = (airports, routes) => {
+  generateRandomConnection = (airports, connections) => {
     let start = airports[Math.floor(Math.random() * airports.length)];
     let destination = airports[Math.floor(Math.random() * airports.length)];
 
     while (
       start === destination ||
-      routes.indexOf([start, destination]) !== -1
+      (start in connections && connections[start].indexOf(destination) !== -1)
     ) {
       start = airports[Math.floor(Math.random() * airports.length)];
       destination = airports[Math.floor(Math.random() * airports.length)];
     }
-    return [start, destination];
+    if (start in connections) {
+      connections[start].push(destination);
+    } else {
+      connections[start] = [destination];
+    }
   };
 
   runSimulation = () => {
@@ -179,7 +196,7 @@ class Airports extends React.Component {
 
 export default Airports;
 
-// test case
+// test cases
 
 // const airports = [
 //   "BGI",
@@ -201,7 +218,6 @@ export default Airports;
 //   "TLV",
 //   "BUD"
 // ],
-
 // const routes = [
 //   ["DSM", "ORD"],
 //   ["ORD", "BGI"],
@@ -223,5 +239,21 @@ export default Airports;
 //   ["SFO", "DSM"],
 //   ["SAN", "EYW"]
 // ]
-
 // const startingAirport = "LGA"
+
+// const airports = ["JFK", "DEL", "ORD"];
+// const routes = [
+//   ["JFK", "DEL"],
+//   ["DEL", "JFK"],
+//   ["ORD", "DEL"],
+// ];
+// const startingAirport = "DEL";
+
+// const airports = ["JFK", "DOH", "SAN", "BGI", "DSM"];
+// const routes = [
+//   ["DSM", "JFK"],
+//   ["DSM", "SAN"],
+//   ["BGI", "DOH"],
+//   ["JFK", "SAN"],
+// ];
+// const startingAirport = "BGI";

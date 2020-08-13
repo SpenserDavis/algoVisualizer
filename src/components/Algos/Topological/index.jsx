@@ -37,12 +37,7 @@ class Topo extends React.Component {
     const depList = {};
     for (let i = 0; i < numJobs; i++) {
       jobs[i] = i + 1;
-      const [prereq, job] = this.generateRandomDep(numJobs, depList);
-      if (job in depList) {
-        depList[job].push(prereq);
-      } else {
-        depList[job] = [prereq];
-      }
+      this.generateRandomDep(numJobs, depList);
     }
     const deps = [];
 
@@ -63,7 +58,11 @@ class Topo extends React.Component {
       prereq = Math.ceil(Math.random() * numJobs);
       job = Math.ceil(Math.random() * numJobs);
     }
-    return [prereq, job];
+    if (job in depList) {
+      depList[job].push(prereq);
+    } else {
+      depList[job] = [prereq];
+    }
   };
 
   runSimulation = () => {
