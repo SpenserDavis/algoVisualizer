@@ -4,17 +4,11 @@ import AlgoHeader from "../../../components/AlgoHeader";
 import { sleep } from "../../../services/utilities";
 import Buttons from "../../Buttons";
 import { dijkstra, getNodesInShortestPathOrder } from "./algo";
-
-const colors = {
-  wall: "black",
-  start: "green",
-  destination: "green",
-  visited: "blue",
-};
+import "./dijkstra.css";
 
 const gridHeight = 10;
 const gridWidth = 19;
-const wallProbability = 0.5;
+const wallProbability = 0.4;
 
 class Dijkstra extends React.Component {
   constructor(props) {
@@ -22,6 +16,8 @@ class Dijkstra extends React.Component {
     this._isMounted = true;
     this.state = {
       grid: [],
+      startingNodeLocation: [-1, -1],
+      destinationNodeLocation: [-1, -1],
       simulationIsRunning: false,
       simulationIsComplete: false,
     };
@@ -36,6 +32,11 @@ class Dijkstra extends React.Component {
   }
 
   getRandomizedGrid = () => {
+    const elements = document.getElementsByClassName("gridSquare");
+    for (let el of elements) {
+      el.classList.remove("dnode-path", "dnode-visited");
+    }
+    console.log(elements);
     const startingNodeLocation = [
       Math.floor(Math.random() * gridHeight),
       Math.floor((Math.random() * gridWidth) / 3),
@@ -63,14 +64,20 @@ class Dijkstra extends React.Component {
       }
       grid.push(row);
     }
-    console.log(grid);
-    this.setState({ grid });
+
+    this._isMounted &&
+      this.setState({
+        grid,
+        simulationIsComplete: false,
+        startingNodeLocation,
+        destinationNodeLocation,
+      });
   };
 
   generateNewNode = (i, j, sLoc, dLoc) => {
     return {
-      i,
-      j,
+      row: i,
+      col: j,
       isStart: i === sLoc[0] && j === sLoc[1],
       isDestination: i === dLoc[0] && j === dLoc[1],
       visited: false,
@@ -79,26 +86,67 @@ class Dijkstra extends React.Component {
       isWall:
         j > gridWidth / 3 &&
         j < Math.floor((2 * gridWidth) / 3) &&
-        Math.random() > wallProbability,
+        Math.random() < wallProbability,
     };
   };
 
-  runSimulation = () => {};
+  runSimulation = async () => {
+    this._isMounted && this.setState({ simulationIsRunning: true });
+    const { grid, startingNodeLocation, destinationNodeLocation } = this.state;
+    const [sx, sy] = startingNodeLocation;
+    const [dx, dy] = destinationNodeLocation;
+    const startingNode = grid[sx][sy];
+    const destinationNode = grid[dx][dy];
+    const visitedNodes = dijkstra(grid, startingNode, destinationNode);
+    const pathNodes = getNodesInShortestPathOrder(destinationNode);
+    await this.animateAlgo(visitedNodes, pathNodes);
+    this._isMounted &&
+      this.setState({ simulationIsRunning: false, simulationIsComplete: true });
+  };
+
+  animateAlgo = async (visitedNodes, pathNodes) => {
+    const { speed } = this.props;
+    for (let i = 0; i <= visitedNodes.length; i++) {
+      if (i === visitedNodes.length) {
+        await sleep((speed / 50) * i);
+        await this.animatePath(pathNodes);
+        return;
+      }
+
+      await sleep((speed / 200) * i);
+      const node = visitedNodes[i];
+      let visitedClassName = "gridSquare dnode-visited";
+      visitedClassName +=
+        node.isStart || node.isDestination ? " dnode-green" : "";
+      document.getElementById(
+        `dnode-${node.row}-${node.col}`
+      ).className = visitedClassName;
+    }
+  };
+
+  animatePath = async (pathNodes) => {
+    const { speed } = this.props;
+    for (let i = 0; i < pathNodes.length; i++) {
+      await sleep(speed / 10);
+
+      const node = pathNodes[i];
+      let pathClassName = "gridSquare dnode-path";
+      pathClassName += node.isStart || node.isDestination ? " dnode-green" : "";
+      document.getElementById(
+        `dnode-${node.row}-${node.col}`
+      ).className = pathClassName;
+    }
+  };
 
   getSquareStyles = (grid, i, j) => {
     const c = grid[i][j];
     let classNames = ["gridSquare"];
-    if (c.visited) {
-      classNames.push(colors["visited"]);
-    }
+
     if (c.isWall) {
-      classNames.push(colors["wall"]);
+      classNames.push("dnode-wall");
     }
-    if (c.isStart) {
-      classNames.push(colors["start"]);
-    }
-    if (c.isDestination) {
-      classNames.push(colors["destination"]);
+    if (c.isStart || c.isDestination) {
+      classNames.push("dnode-green");
     }
 
     return classNames.join(" ");
@@ -115,7 +163,12 @@ class Dijkstra extends React.Component {
             >
               {r.map((c, j) => (
                 <div key={`gridCol-${j}`}>
-                  <div className={this.getSquareStyles(grid, i, j)}></div>
+                  <div
+                    id={`dnode-${i}-${j}`}
+                    className={this.getSquareStyles(grid, i, j)}
+                  >
+                    {c.isStart ? "s" : c.isDestination ? "d" : ""}
+                  </div>
                 </div>
               ))}
             </div>

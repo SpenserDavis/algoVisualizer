@@ -82,6 +82,7 @@ body {
 .gridSquare.green {
   background-color: green;
 }
+
 .gridSquare.purple {
   background-color: rgb(255, 0, 255);
 }
