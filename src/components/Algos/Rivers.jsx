@@ -85,8 +85,6 @@ class Rivers extends React.Component {
   };
 
   tryAddRiver(matrix, i, j, idx, sizes) {
-    // const mutateDirection = Math.random() < 0.2;
-
     matrix[i][j] = 1;
     sizes[idx]--;
     if (!sizes[idx]) {
