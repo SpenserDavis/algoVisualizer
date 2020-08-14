@@ -12,6 +12,15 @@ const Buttons = ({
   };
 
   const handleRunSimRequest = () => {
+    setTimeout(
+      () =>
+        window.scrollTo({
+          left: 0,
+          top: document.body.scrollHeight,
+          behavior: "smooth",
+        }),
+      0.5
+    );
     runSimulation();
   };
 

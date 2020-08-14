@@ -347,13 +347,17 @@ class Boggle extends React.Component {
     return (
       <div
         id="target-words"
-        className="row d-flex justify-content-between align-items-center"
+        className="wordRow row d-flex justify-content-between align-items-center"
       >
         <div className="col">
           <h6>Target Words: </h6>
           <span> {targetWords.join(", ")}</span>
         </div>
-        <div className={`col ${simulationIsComplete ? "simCompleteBox" : ""}`}>
+        <div
+          className={`col foundWords ${
+            simulationIsComplete ? "simCompleteBox" : ""
+          }`}
+        >
           <h6>Found Words:</h6>
           <span>
             {" "}

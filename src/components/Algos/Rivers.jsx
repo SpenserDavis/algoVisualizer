@@ -267,14 +267,14 @@ class Rivers extends React.Component {
     riverSizes
   ) => {
     return (
-      <div className="col d-flex justify-content-end align-items-end">
-        <h6
-          className={`no-wrap ${simulationIsComplete ? "simCompleteBox" : ""}`}
-        >
-          Sizes:{" "}
-          {(simulationIsRunning || simulationIsComplete) &&
-            `[${riverSizes.toString()}]`}
-        </h6>
+      <div className="row d-flex justify-content-between align-items-center ioRow">
+        <div className="col d-flex justify-content-center align-items-end">
+          <h6 className={simulationIsComplete ? "simCompleteBox" : ""}>
+            Sizes:{" "}
+            {(simulationIsRunning || simulationIsComplete) &&
+              `[${riverSizes.toString()}]`}
+          </h6>
+        </div>
       </div>
     );
   };

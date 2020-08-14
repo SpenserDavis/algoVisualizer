@@ -96,17 +96,17 @@ class Topo extends React.Component {
     const depsString = `[ ${depsStringArr.join(", ")} ]`;
 
     return (
-      <div className="jobRow">
-        <div className="row d-flex justify-content-start align-items-center">
-          <h6 className="no-wrap">Jobs: {`[${jobs.join(", ")}]`}</h6>
+      <>
+        <div className="jobRow row d-flex justify-content-start align-items-center">
+          <div className="col">
+            <h6>Jobs: {`[${jobs.join(", ")}]`}</h6>
+
+            <h6>Deps: {depsString}</h6>
+          </div>
         </div>
-        <div className="row d-flex justify-content-between align-items-center">
-          <h6>Deps: {depsString}</h6>
-          <h6
-            className={`no-wrap ${
-              simulationIsComplete ? "simCompleteBox" : ""
-            }`}
-          >
+
+        <div className="ioRow row d-flex justify-content-center align-items-center">
+          <h6 className={simulationIsComplete ? "simCompleteBox" : ""}>
             Ordered Jobs:{" "}
             {(simulationIsRunning || simulationIsComplete) &&
             orderedJobs.length > 0
@@ -114,7 +114,7 @@ class Topo extends React.Component {
               : "[ ]"}
           </h6>
         </div>
-      </div>
+      </>
     );
   };
 

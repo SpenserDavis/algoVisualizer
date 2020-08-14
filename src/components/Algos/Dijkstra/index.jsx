@@ -118,9 +118,11 @@ class Dijkstra extends React.Component {
       let visitedClassName = "gridSquare dnode-visited";
       visitedClassName +=
         node.isStart || node.isDestination ? " dnode-green" : "";
-      document.getElementById(
-        `dnode-${node.row}-${node.col}`
-      ).className = visitedClassName;
+      if (this._isMounted) {
+        document.getElementById(
+          `dnode-${node.row}-${node.col}`
+        ).className = visitedClassName;
+      }
     }
   };
 
@@ -132,9 +134,11 @@ class Dijkstra extends React.Component {
       const node = pathNodes[i];
       let pathClassName = "gridSquare dnode-path";
       pathClassName += node.isStart || node.isDestination ? " dnode-green" : "";
-      document.getElementById(
-        `dnode-${node.row}-${node.col}`
-      ).className = pathClassName;
+      if (this._isMounted) {
+        document.getElementById(
+          `dnode-${node.row}-${node.col}`
+        ).className = pathClassName;
+      }
     }
   };
 

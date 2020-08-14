@@ -1,5 +1,5 @@
 import React from "react";
-import description from "../../../algoProblemDescriptions/topological";
+import description from "../../../algoProblemDescriptions/airports";
 import AlgoHeader from "../../../components/AlgoHeader";
 import Buttons from "../../Buttons";
 import AirportConnGraph from "./AirportConnGraph";
@@ -27,7 +27,7 @@ const allAirports = [
 ];
 
 const numRoutesLowerBound = 3;
-const numRoutesUpperBound = 10;
+const numRoutesUpperBound = 8;
 
 class Airports extends React.Component {
   constructor(props) {
@@ -134,20 +134,16 @@ class Airports extends React.Component {
     return (
       <div className="widgetRow">
         <div className="row d-flex justify-content-start align-items-center">
-          <h6 className="no-wrap">Airports: {`[${airports.join(", ")}]`}</h6>
+          <h6>Airports: {`[${airports.join(", ")}]`}</h6>
         </div>
         <div className="row d-flex justify-content-start align-items-center">
           <h6>Routes: {routesString}</h6>
         </div>
         <div className="row d-flex justify-content-start align-items-center">
-          <h6 className="no-wrap">Starting Airport: {startingAirport}</h6>{" "}
+          <h6>Starting Airport: {startingAirport}</h6>{" "}
         </div>
-        <div className="row d-flex justify-content-end align-items-center">
-          <h6
-            className={`no-wrap ${
-              simulationIsComplete ? "simCompleteBox" : ""
-            }`}
-          >
+        <div className="row widgetRow d-flex justify-content-center align-items-center">
+          <h6 className={simulationIsComplete ? "simCompleteBox" : ""}>
             Min Connections:{" "}
             {(simulationIsRunning || simulationIsComplete) && minConnections}
           </h6>
@@ -184,7 +180,7 @@ class Airports extends React.Component {
                 airports={airports}
                 routes={routes}
                 startingAirport={startingAirport}
-                speed={this.props.speed * 10}
+                speed={this.props.speed * 3}
               />
             )}
           </div>

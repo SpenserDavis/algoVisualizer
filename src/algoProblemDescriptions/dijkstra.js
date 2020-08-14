@@ -8,7 +8,8 @@ const description = (
       between the two cells.
     </p>
     <p>
-      Note that diagonal travel is disallowed, and some cells are untraversable.
+      Note that diagonal travel is disallowed, and black cells are
+      untraversable.
     </p>
   </div>
 );
