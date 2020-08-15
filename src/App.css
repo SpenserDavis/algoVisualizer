@@ -2,6 +2,10 @@
   box-sizing: border-box;
 }
 
+body {
+  background-color: rgb(204, 204, 204);
+}
+
 .menu {
   border: 1px solid #ccc;
   background-color: #f1f1f1;
@@ -78,6 +82,7 @@
 .gridSquare.green {
   background-color: green;
 }
+
 .gridSquare.purple {
   background-color: rgb(255, 0, 255);
 }
@@ -85,17 +90,57 @@
   background-color: yellow;
 }
 .gridSquare.blue {
-  background-color: blue;
+  background-color: rgb(0, 153, 255);
 }
 .gridSquare.black {
   background-color: black;
 }
+.gridSquare.brown {
+  background-color: rgb(175, 92, 54);
+}
 
 .grid {
-  margin-top: 10px;
+  margin-top: 20px;
 }
 
 .simCompleteBox {
-  border: 1px solid blue;
+  border: 1px solid rgb(0, 81, 255);
   padding: 5px;
+}
+
+.currNode {
+  border: 4px solid rgb(251, 255, 0);
+  padding: 4px 4px;
+}
+
+.visitedNode {
+  background-color: rgb(255, 195, 255) !important;
+}
+
+.visitedNode.riverNode {
+  background-color: rgb(0, 119, 255) !important;
+}
+
+#target-words {
+  margin: 15px 70px 10px 70px;
+}
+
+.visitingNode {
+  background-color: cyan !important;
+}
+
+.speed-button {
+  margin-right: 10px;
+}
+
+.widgetRow {
+  margin-top: 20px;
+}
+
+.ioRow {
+  margin: 15px;
+}
+
+.foundWords {
+  margin-right: 15px;
 }

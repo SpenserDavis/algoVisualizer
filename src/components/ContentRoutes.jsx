@@ -5,7 +5,7 @@ import Animation from "./Loader/Animation";
 import { routes } from "../router";
 import { withRouter } from "react-router-dom";
 
-const ContentRoutes = () => {
+const ContentRoutes = (props) => {
   return (
     <div className="col">
       <ErrorBoundary>
@@ -15,7 +15,7 @@ const ContentRoutes = () => {
               <Route
                 path={route.path}
                 key={`route-${i}`}
-                render={(props) => <route.component {...props} />}
+                render={(p) => <route.component {...props} {...p} />}
               />
             ))}
           </Switch>

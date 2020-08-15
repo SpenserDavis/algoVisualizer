@@ -1,0 +1,49 @@
+.arrow {
+  stroke: rgb(0, 0, 0);
+  stroke-width: 2;
+  marker-end: url(#markerArrow);
+}
+
+.first-row {
+  margin-top: 60px;
+}
+
+.gridSquare-null-start {
+  width: 50px;
+}
+
+.grid-container {
+  margin: 40px;
+}
+
+.gridSquare-node {
+  display: inline-block;
+  position: relative;
+  height: 66px;
+  width: 66px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.border-black {
+  border: 1px solid black;
+}
+
+.triangle {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  position: absolute;
+}
+
+.triangle-up {
+  border-bottom: 5px solid black;
+  top: 10px;
+}
+
+.triangle-down {
+  border-top: 5px solid black;
+  bottom: 10px;
+}

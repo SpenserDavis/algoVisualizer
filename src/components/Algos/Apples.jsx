@@ -2,6 +2,7 @@ import React from "react";
 import description from "../../algoProblemDescriptions/apples";
 import AlgoHeader from "../AlgoHeader";
 import { sleep } from "../../services/utilities";
+import Buttons from "../Buttons";
 
 const colors = { 0: "white", 1: "green", 2: "purple" };
 
@@ -17,13 +18,21 @@ const initialStatePresets = {
 };
 
 class Apples extends React.Component {
-  state = {
-    appleMatrix: [],
-    ...initialStatePresets,
-  };
+  constructor(props) {
+    super(props);
+    this._isMounted = true;
+    this.state = {
+      appleMatrix: [],
+      ...initialStatePresets,
+    };
+  }
 
   componentDidMount() {
     this.getRandomizedMatrix();
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   getRandomizedMatrix = () => {
@@ -55,19 +64,20 @@ class Apples extends React.Component {
       let modifiableMatrix = new Array(appleMatrix.length)
         .fill(0)
         .map((_, i) => appleMatrix[i].slice());
-      console.log("a");
+
       const dayCounter = await this.getNumDays(modifiableMatrix);
-      this.setState({
-        dayCounter,
-        simulationIsRunning: false,
-        simulationIsComplete: true,
-      });
+      this._isMounted &&
+        this.setState({
+          dayCounter,
+          simulationIsRunning: false,
+          simulationIsComplete: true,
+        });
     });
   };
 
   getNumDays = async (matrix) => {
     let days = 0;
-    console.log("b");
+
     const toTraverse = [[-1, -1]];
     let freshCount = [0];
     for (let i = 0; i < matrix.length; i++) {
@@ -89,7 +99,7 @@ class Apples extends React.Component {
       if (x === -1) {
         if (toTraverse.length) {
           days++;
-          this.setState({ dayCounter: days });
+          this._isMounted && this.setState({ dayCounter: days });
           toTraverse.push([-1, -1]);
         }
       } else {
@@ -133,73 +143,74 @@ class Apples extends React.Component {
       infectionDidOccur = true;
       infectedNeighbors.push([x, y + 1]);
     }
-    this.setState({ appleMatrix: matrix });
+    this._isMounted && this.setState({ appleMatrix: matrix });
     if (infectionDidOccur) {
-      await sleep(100);
+      await sleep(this.props.speed);
     }
     return infectedNeighbors;
   };
 
-  renderButtonRow = () => {
-    const {
-      simulationIsRunning,
-      simulationIsComplete,
-      dayCounter,
-    } = this.state;
+  renderGrid = (appleMatrix) => {
     return (
-      <div className="row">
-        <div className="col"></div>
-        <div className="col d-flex justify-content-center">
-          <button
-            disabled={simulationIsRunning}
-            onClick={this.getRandomizedMatrix}
-            className="btn btn-primary"
-          >
-            Randomize Grid
-          </button>
+      <div className="row grid">
+        <div className="col">
+          {appleMatrix.length > 0 &&
+            appleMatrix.map((r, i) => (
+              <div
+                className="row d-flex justify-content-center"
+                key={`appleRow-${i}`}
+              >
+                {r.map((c, j) => (
+                  <div key={`appleCol-${j}`}>
+                    <div className={`gridSquare ${colors[c]}`}> {c}</div>
+                  </div>
+                ))}
+              </div>
+            ))}
         </div>
-        <div className="col d-flex justify-content-center">
-          <button
-            disabled={simulationIsRunning || simulationIsComplete}
-            onClick={this.runSimulation}
-            className="btn btn-success"
-          >
-            Run Simulation
-          </button>
-        </div>
-        <div className="col d-flex justify-content-center align-items-end">
-          <h6 className={simulationIsComplete && "simCompleteBox"}>
+      </div>
+    );
+  };
+
+  renderDayCounter = (
+    simulationIsComplete,
+    simulationIsRunning,
+    dayCounter
+  ) => {
+    return (
+      <div className="row d-flex justify-content-between align-items-center ioRow">
+        <div className="col d-flex justify-content-center align-items-center">
+          <h6 className={simulationIsComplete ? "simCompleteBox" : ""}>
             Days: {(simulationIsRunning || simulationIsComplete) && dayCounter}
           </h6>
         </div>
-        <div className="col"></div>
       </div>
     );
   };
 
   render() {
-    const { appleMatrix } = this.state;
+    const {
+      simulationIsComplete,
+      simulationIsRunning,
+      dayCounter,
+      appleMatrix,
+    } = this.state;
     return (
       <>
         <AlgoHeader title="Rotten Apples" description={description} />
-        {this.renderButtonRow()}
-        <div className="row grid">
-          <div className="col">
-            {appleMatrix.length &&
-              appleMatrix.map((r, i) => (
-                <div
-                  className="row d-flex justify-content-center"
-                  key={`appleRow-${i}`}
-                >
-                  {r.map((c, j) => (
-                    <div key={`appleCol-${j}`}>
-                      <div className={`gridSquare ${colors[c]}`}> {c}</div>
-                    </div>
-                  ))}
-                </div>
-              ))}
-          </div>
-        </div>
+        <Buttons
+          randomize={this.getRandomizedMatrix}
+          runSimulation={this.runSimulation}
+          widget={"Apple Matrix"}
+          simulationIsRunning={simulationIsRunning}
+          simulationIsComplete={simulationIsComplete}
+        />
+        {this.renderDayCounter(
+          simulationIsComplete,
+          simulationIsRunning,
+          dayCounter
+        )}
+        {this.renderGrid(appleMatrix)}
       </>
     );
   }
